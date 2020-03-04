@@ -1,5 +1,3 @@
-var stationMarkers = [];    // all station list
-
 $(document).ready(function() {
     resizeWindow();
 
@@ -26,31 +24,18 @@ function initMap() {
             mapTypeId: 'roadmap' // roadmap,satellite,terrain,hybrid
         });
 
-    $.getJSON("./js/demo_GeoJSON.js", function(data){
-        for (var i = 0; i < data.features.length; i++){
-            var coords = data.features[i].geometry.coordinates;
-            var latLng = new google.maps.LatLng(coords[1], coords[0]);
-            var marker = new google.maps.Marker({
-                position: latLng,
-                map: map
-            })
+    map.data.loadGeoJson('./js/demo_GeoJSON.js');
 
-            stationMarkers.push(marker);
-        }
-    });
-
-    for (var i = 0; i < stationMarkers.length; i++){
-        alert(i);
-        // var contentString = 'hello';
-        // var infowindow = new google.maps.InfoWindow({
-        //     content: contentString,
-        //     maxwidth: 300
-        // });
-
-        // google.maps.event.addListener(stationMarkers[i], 'click', function(){
-        //     infowindow.open(map, stationMarkers[i]);
-        // });
-    }
+    // $.getJSON("./js/demo_GeoJSON.js", function(data){
+    //     for (var i = 0; i < data.features.length; i++){
+    //         var coords = data.features[i].geometry.coordinates;
+    //         var latLng = new google.maps.LatLng(coords[1], coords[0]);
+    //         var marker = new google.maps.Marker({
+    //             position: latLng,
+    //             map: map
+    //         })
+    //     }
+    // });
 
     // place a marker on the map where the user clicks
     google.maps.event.addListener(map, 'click', function(event){
@@ -66,5 +51,14 @@ function initMap() {
         google.maps.event.addListener(marker, 'click', function(){
             infowindow.open(map, marker);
         });
+    });
+
+    var infowindow111 = new google.maps.InfoWindow({
+        content: 'test',
+        maxwidth: 300
+    });
+
+    google.maps.event.addListener(marker, 'click', function(){
+        infowindow111.open(map, marker);
     });
 }
