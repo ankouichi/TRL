@@ -8,6 +8,7 @@ $(document).ready(function() {
 
 var map;
 var markers = [];
+var info_window;
 
 function resizeWindow(){
     width = $(window).width();
@@ -35,22 +36,22 @@ function initMap() {
             for (var i = 0; i < data.features.length; i++){
                 var coord = data.features[i].geometry.coordinates;
                 var latLng = new google.maps.LatLng(coord[1], coord[0]);
-                addMarker(latLng);
+                addMarker(latLng, data.features[i].properties);
             }
         }
     });
     
     // place a marker on the map where the user clicks
     google.maps.event.addListener(map, 'click', function(event){
-        startlocation = event.latLng;
+        accident = event.latLng;
 
-        var marker = new google.maps.Marker({position: startlocation, map: map});
-        addMarkerClickListener(marker);
+        var marker = new google.maps.Marker({position: accident, map: map});
+        addMarkerClickListener(marker, concatSpotConStr());
     });
 }
 
 // Adds a marker to the map and push to the array.
-function addMarker(location){
+function addMarker(location, properties){
     var marker = new google.maps.Marker({
         position: location,
         map: map,
@@ -59,29 +60,53 @@ function addMarker(location){
       });
 
     markers.push(marker);
-    addMarkerClickListener(marker);
+    addMarkerClickListener(marker, concatStatConStr(properties));
 }
 
-// Add a listener to a clicked marker
-function addMarkerClickListener(marker){
+function concatStatConStr(properties){
+    var trucks = getRandomInt(10);
+
     var contentString = '<div id="content">'+
     '<div id="siteNotice">'+
     '</div>'+
-    '<h2 id="firstHeading" class="firstHeading">Test Head</h2>'+
+    '<h2 id="firstHeading" class="firstHeading">'+ properties.ID +
+    '</h2><div id="bodyContent"><p>' + properties.Address + 
+    ' ' + properties.ZipCode + 
+    '<p><a href="#">Tracks: ' + trucks +
+    '</a></p></div></div>';
+
+    return contentString; 
+}
+
+function concatSpotConStr(){
+    var contentString = '<div id="content">'+
+    '<div id="siteNotice">'+
+    '</div>'+
+    '<h2 id="firstHeading" class="firstHeading">This is an accident spot</h2>'+
     '<div id="bodyContent">'+
     '<p>Test Address 1 Info</p>'+
     '<p>Test Address 2 Info</p>' +
     '<p><a href="#">Test Links</a></p>'
     '</div>'+
     '</div>';
-    
+
+    return contentString; 
+}
+
+// Add a listener to a clicked marker
+function addMarkerClickListener(marker, conStr){
     var infowindow = new google.maps.InfoWindow({
-        content: contentString,
+        content: conStr,
         maxwidth: 300
     });
 
     google.maps.event.addListener(marker, 'click', function(){
+        if(info_window){
+            info_window.close();
+        }
+
         infowindow.open(map, marker);
+        info_window = infowindow;
     });
 }
 
@@ -107,3 +132,7 @@ function deleteMarkers() {
     clearMarkers();
     markers = [];
 }
+
+function getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+  }
