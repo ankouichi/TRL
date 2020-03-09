@@ -10,7 +10,9 @@ var map;
 var station_markers = [];
 var accident_marker;
 var info_window;
+var dallas = {lat: 32.80, lng: -96.80};
 
+// ajust the map size accoding to the window size
 function resizeWindow(){
     width = $(window).width();
     height = $(window).height();
@@ -18,17 +20,57 @@ function resizeWindow(){
     $("#map").height(height).width(width);
 }
 
+/**
+ * The CenterControl adds a control to the map that recenters the map on Dallas.
+ * This constructor takes the control DIV as an argument.
+ * @constructor
+ */
+function CenterControl(controlDiv, map) {
+
+    // Set CSS for the go-center control border
+    var goCenterUI = document.createElement('div');
+    goCenterUI.id = 'goCenterUI';
+    goCenterUI.title = 'Click to recenter the map';
+    controlDiv.appendChild(goCenterUI);
+
+    // Set CSS for the control interior
+    var goCenterText = document.createElement('div');
+    goCenterText.id = 'goCenterText';
+    goCenterText.innerHTML = 'Center Map';
+    goCenterUI.appendChild(goCenterText);
+
+    // Set CSS for the show-all control border
+    var showAllUI = document.createElement('div');
+    showAllUI.id = 'showAllUI';
+    showAllUI.title = 'Click to show the locations of all fire stations';
+    controlDiv.appendChild(showAllUI);
+
+    // Set CSS for the control interior
+    var showAllText = document.createElement('div');
+    showAllText.id = 'showAllText';
+    showAllText.innerHTML = 'Show All Stations';
+    showAllUI.appendChild(showAllText);
+
+    // Setup the click event listeners: simply set the map to Chicago.
+    goCenterUI.addEventListener('click', function() {
+        map.setCenter(dallas);
+      });
+
+    // Set up the click event listener for 'Show All':
+    // Show all hidden fire stations on the map.
+    showAllUI.addEventListener('click', function() {
+        setMapOnAll(map);
+    });
+  }
+
 function initMap() {
     // The bounds of Dallas
     var Dallas_BOUNDS = {
         north: 33.20,
-        south: 32.50,
+        south: 32.40,
         west: -97.70,
         east: -96.00
     };
-
-    // The location of Dallas
-    var dallas = {lat: 32.80, lng: -96.80};
     // The map, centered at Dallas
     map = new google.maps.Map(
         document.getElementById('map'), {
@@ -40,6 +82,15 @@ function initMap() {
             },
             mapTypeId: 'roadmap' // roadmap,satellite,terrain,hybrid
         });
+
+    // Create the DIV to hold the control and call the CenterControl()
+    // constructor passing in this DIV.
+    var centerControlDiv = document.createElement('div');
+    var centerControl = new CenterControl(centerControlDiv, map);
+
+    centerControlDiv.index = 1;
+    centerControlDiv.style['padding-top'] = '10px';
+    map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
 
     $.ajax({
         url: "./js/station_GeoJSON.js",
