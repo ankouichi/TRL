@@ -11,6 +11,8 @@ var station_markers = [];
 var accident_marker;
 var info_window;
 var dallas = {lat: 32.80, lng: -96.80};
+var initialZoom = 11;
+var nodes;
 
 // ajust the map size accoding to the window size
 function resizeWindow(){
@@ -54,6 +56,8 @@ function CenterControl(controlDiv, map) {
     // Setup the click event listeners: simply set the map to Chicago.
     goCenterUI.addEventListener('click', function() {
         map.setCenter(dallas);
+        map.setZoom(initialZoom);
+        setMapOnAll(map);
       });
 
     // Set up the click event listener for 'Show All':
@@ -74,7 +78,7 @@ function initMap() {
     // The map, centered at Dallas
     map = new google.maps.Map(
         document.getElementById('map'), {
-            zoom: 11,
+            zoom: initialZoom,
             center: dallas,
             restriction:{
                 latLngBounds: Dallas_BOUNDS,
@@ -104,6 +108,10 @@ function initMap() {
             }
         }
     });
+
+    $.getJSON("./js/nodes.json", function (data){
+        nodes = data;
+    })
     
     // place a marker on the map where the user clicks
     google.maps.event.addListener(map, 'click', function(event){
@@ -114,11 +122,17 @@ function initMap() {
         }
 
         accident = event.latLng;
-        accident_marker = new google.maps.Marker({position: accident, map: map});
+        accident_marker = new google.maps.Marker({
+            position: accident,
+            icon:'./img/accident-icon.png',
+            map: map});
         addMarkerClickListener(accident_marker, concatSpotConStr());
 
         // Show k-nearest stations on the map, hidden the others.
         setMapOnNearest(map, 4, accident);
+
+        map.setCenter({lat: accident.lat(), lng: accident.lng()});
+        map.setZoom(14);
     });
 }
 
@@ -206,6 +220,12 @@ function setMapOnNearest(map, k, coords){
 }
 
 // TODO: Approach One: Radius - based
+
+// Iterates through the whole node list to get the nearest one
+// from the accident spot
+function matchPointWithNode(){
+
+}
 
 // Sets the map on all markers in the array.
 function setMapOnAll(map) {
