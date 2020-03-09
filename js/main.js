@@ -7,7 +7,8 @@ $(document).ready(function() {
 })
 
 var map;
-var markers = [];
+var station_markers = [];
+var accident_marker;
 var info_window;
 
 function resizeWindow(){
@@ -18,6 +19,14 @@ function resizeWindow(){
 }
 
 function initMap() {
+    // The bounds of Dallas
+    var Dallas_BOUNDS = {
+        north: 33.20,
+        south: 32.50,
+        west: -97.70,
+        east: -96.00
+    };
+
     // The location of Dallas
     var dallas = {lat: 32.80, lng: -96.80};
     // The map, centered at Dallas
@@ -25,6 +34,10 @@ function initMap() {
         document.getElementById('map'), {
             zoom: 11,
             center: dallas,
+            restriction:{
+                latLngBounds: Dallas_BOUNDS,
+                strictBounds: false
+            },
             mapTypeId: 'roadmap' // roadmap,satellite,terrain,hybrid
         });
 
@@ -43,10 +56,18 @@ function initMap() {
     
     // place a marker on the map where the user clicks
     google.maps.event.addListener(map, 'click', function(event){
-        accident = event.latLng;
+        // Bug fix: remove accident marker if exists.
+        if (accident_marker){
+            accident_marker.setMap(null);
+            accident_marker = null;
+        }
 
-        var marker = new google.maps.Marker({position: accident, map: map});
-        addMarkerClickListener(marker, concatSpotConStr());
+        accident = event.latLng;
+        accident_marker = new google.maps.Marker({position: accident, map: map});
+        addMarkerClickListener(accident_marker, concatSpotConStr());
+
+        // Show k-nearest stations on the map, hidden the others.
+        setMapOnNearest(map, 4, accident);
     });
 }
 
@@ -59,7 +80,7 @@ function addMarker(location, properties){
         animation: google.maps.Animation.DROP
       });
 
-    markers.push(marker);
+    station_markers.push(marker);
     addMarkerClickListener(marker, concatStatConStr(properties));
 }
 
@@ -71,8 +92,8 @@ function concatStatConStr(properties){
     '</div>'+
     '<h2 id="firstHeading" class="firstHeading">'+ properties.ID +
     '</h2><div id="bodyContent"><p>' + properties.Address + 
-    ' ' + properties.ZipCode + 
-    '<p><a href="#">Tracks: ' + trucks +
+    ' , ' + properties.ZipCode + 
+    '<p><a href="#">Trucks: ' + trucks +
     '</a></p></div></div>';
 
     return contentString; 
@@ -101,6 +122,7 @@ function addMarkerClickListener(marker, conStr){
     });
 
     google.maps.event.addListener(marker, 'click', function(){
+        // Bug Fix: close info_window if exists.
         if(info_window){
             info_window.close();
         }
@@ -110,10 +132,34 @@ function addMarkerClickListener(marker, conStr){
     });
 }
 
+// Sets the map on nearest station markers
+// Approach One: Number - based
+function setMapOnNearest(map, k, coords){
+    clearMarkers();
+
+    station_markers.sort(function(a,b){
+        a_lat_distance = a.position.lat() - coords.lat();
+        a_lng_distance = a.position.lng() - coords.lng();
+        a_l2_distance = Math.sqrt(a_lat_distance * a_lat_distance + a_lng_distance * a_lng_distance);
+
+        b_lat_distance = b.position.lat() - coords.lat();
+        b_lng_distance = b.position.lng() - coords.lng();
+        b_l2_distance = Math.sqrt(b_lat_distance * b_lat_distance + b_lng_distance * b_lng_distance);
+
+        return a_l2_distance - b_l2_distance
+    });
+
+    for (var i = 0; i < k; i++){
+        station_markers[i].setMap(map);
+    }
+}
+
+// TODO: Approach One: Radius - based
+
 // Sets the map on all markers in the array.
 function setMapOnAll(map) {
-    for (var i = 0; i < markers.length; i++) {
-      markers[i].setMap(map);
+    for (var i = 0; i < station_markers.length; i++) {
+        station_markers[i].setMap(map);
     }
 }
 
@@ -130,7 +176,7 @@ function showMarkers() {
 // Deletes all markers in the array by removing references to them.
 function deleteMarkers() {
     clearMarkers();
-    markers = [];
+    station_markers = [];
 }
 
 function getRandomInt(max) {
