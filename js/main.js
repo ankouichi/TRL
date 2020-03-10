@@ -124,7 +124,7 @@ function initMap() {
         accident = event.latLng;
         accident_marker = new google.maps.Marker({
             position: accident,
-            icon:'./img/accident-icon.png',
+            icon:'./img/jiaotongshigu.png',
             map: map});
         addMarkerClickListener(accident_marker, concatSpotConStr());
 
