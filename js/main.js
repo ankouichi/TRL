@@ -12,7 +12,10 @@ var accident_marker;
 var info_window;
 var dallas = {lat: 32.80, lng: -96.80};
 var initialZoom = 11;
+var accidentZoom = 14;
 var nodes;
+var node_markers = [];
+var node_limit = 3;
 
 // ajust the map size accoding to the window size
 function resizeWindow(){
@@ -28,30 +31,13 @@ function resizeWindow(){
  * @constructor
  */
 function CenterControl(controlDiv, map) {
-
-    // Set CSS for the go-center control border
-    var goCenterUI = document.createElement('div');
-    goCenterUI.id = 'goCenterUI';
-    goCenterUI.title = 'Click to recenter the map';
+    var goCenterUI = createControlDiv('goCenterUI', 'Click to recenter the map',
+    'goCenterText','Center Map');
     controlDiv.appendChild(goCenterUI);
 
-    // Set CSS for the control interior
-    var goCenterText = document.createElement('div');
-    goCenterText.id = 'goCenterText';
-    goCenterText.innerHTML = 'Center Map';
-    goCenterUI.appendChild(goCenterText);
-
-    // Set CSS for the show-all control border
-    var showAllUI = document.createElement('div');
-    showAllUI.id = 'showAllUI';
-    showAllUI.title = 'Click to show the locations of all fire stations';
+    var showAllUI = createControlDiv('showAllUI', 'Click to show the locations of all fire stations',
+    'showAllText','Show All Stations');
     controlDiv.appendChild(showAllUI);
-
-    // Set CSS for the control interior
-    var showAllText = document.createElement('div');
-    showAllText.id = 'showAllText';
-    showAllText.innerHTML = 'Show All Stations';
-    showAllUI.appendChild(showAllText);
 
     // Setup the click event listeners: simply set the map to Chicago.
     goCenterUI.addEventListener('click', function() {
@@ -65,6 +51,66 @@ function CenterControl(controlDiv, map) {
     showAllUI.addEventListener('click', function() {
         setMapOnAll(map);
     });
+
+    /// TODO: Working on this part right now - March 11th, 2020
+    var testCaseUI = createControlDiv('testCaseUI', 'Click to show the test case', 
+    'testCaseText', 'Test Case');
+
+    controlDiv.appendChild(testCaseUI);
+    testCaseUI.addEventListener('click', function(){
+        var testLocation = {lat: 32.8891282215679, lng: -96.78695373535156};
+        map.setCenter(testLocation);
+        map.setZoom(accidentZoom);
+
+        if (accident_marker){
+            accident_marker.setMap(null);
+        }
+
+        accident_marker = new google.maps.Marker({
+            position: testLocation,
+            icon:'./img/jiaotongshigu.png',
+            map: map});
+
+        // show 4-nearest fire stations
+        setMapOnNearest(map, 4, testLocation);
+        // sort the nodes by distance with the accident spot
+        sortNodesByDistance(testLocation);
+        google.maps.event.addListener(accident_marker, 'click', function(){
+            if (node_limit - node_markers.length > 0){
+                var node = {lat: parseFloat(nodes[node_markers.length].Y), lng: parseFloat(nodes[node_markers.length].X)};
+                var node_marker = new google.maps.Marker({
+                    position: node,
+                    icon:'./img/add_location_2x.png',
+                    map: map});
+    
+                node_markers.push(node_marker);
+            } else{
+                for (var i = 0; i < node_markers.length; i++) {
+                    node_markers[i].setMap(null);
+                }
+
+                node_markers = [];
+            }
+        });
+        
+    });
+
+  }
+
+  // create Control Div with interior text and click function
+  function createControlDiv(id, title, text_id, text_inner_html){
+    // Set CSS for the control border
+    var ui = document.createElement('div');
+    ui.id = id;
+    ui.title = title;
+
+    // Set CSS for the control interior
+    var text = document.createElement('div');
+    text.id = text_id;
+    text.innerHTML = text_inner_html;
+    ui.appendChild(text);
+
+    return ui;
   }
 
 function initMap() {
@@ -96,6 +142,7 @@ function initMap() {
     centerControlDiv.style['padding-top'] = '10px';
     map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
 
+    // Fetch fire stations 
     $.ajax({
         url: "./js/station_GeoJSON.js",
         dataType: 'json',
@@ -109,9 +156,10 @@ function initMap() {
         }
     });
 
+    // Fetch nodes info
     $.getJSON("./js/nodes.json", function (data){
         nodes = data;
-    })
+    });
     
     // place a marker on the map where the user clicks
     google.maps.event.addListener(map, 'click', function(event){
@@ -128,11 +176,12 @@ function initMap() {
             map: map});
         addMarkerClickListener(accident_marker, concatSpotConStr());
 
+        var accident_coords = {lat: accident.lat(), lng: accident.lng()};
         // Show k-nearest stations on the map, hidden the others.
-        setMapOnNearest(map, 4, accident);
+        setMapOnNearest(map, 4, accident_coords);
 
         map.setCenter({lat: accident.lat(), lng: accident.lng()});
-        map.setZoom(14);
+        map.setZoom(accidentZoom);
     });
 }
 
@@ -203,12 +252,12 @@ function setMapOnNearest(map, k, coords){
     clearMarkers();
 
     station_markers.sort(function(a,b){
-        a_lat_distance = a.position.lat() - coords.lat();
-        a_lng_distance = a.position.lng() - coords.lng();
+        a_lat_distance = a.position.lat() - coords.lat;
+        a_lng_distance = a.position.lng() - coords.lng;
         a_l2_distance = Math.sqrt(a_lat_distance * a_lat_distance + a_lng_distance * a_lng_distance);
 
-        b_lat_distance = b.position.lat() - coords.lat();
-        b_lng_distance = b.position.lng() - coords.lng();
+        b_lat_distance = b.position.lat() - coords.lat;
+        b_lng_distance = b.position.lng() - coords.lng;
         b_l2_distance = Math.sqrt(b_lat_distance * b_lat_distance + b_lng_distance * b_lng_distance);
 
         return a_l2_distance - b_l2_distance
@@ -221,10 +270,19 @@ function setMapOnNearest(map, k, coords){
 
 // TODO: Approach One: Radius - based
 
-// Iterates through the whole node list to get the nearest one
-// from the accident spot
-function matchPointWithNode(){
+// Sort the whole node list by the distance between the accident spot and each node
+function sortNodesByDistance(coords){
+    nodes.sort(function(a,b){
+        a_lat_distance = a.Y - coords.lat;
+        a_lng_distance = a.X - coords.lng;
+        a_l2_distance = Math.sqrt(a_lat_distance * a_lat_distance + a_lng_distance * a_lng_distance);
 
+        b_lat_distance = b.Y - coords.lat;
+        b_lng_distance = b.X - coords.lng;
+        b_l2_distance = Math.sqrt(b_lat_distance * b_lat_distance + b_lng_distance * b_lng_distance);
+
+        return a_l2_distance - b_l2_distance
+    });
 }
 
 // Sets the map on all markers in the array.

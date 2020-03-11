@@ -8,7 +8,7 @@ html, body {
     padding: 0;
   }
 
-  #goCenterUI, #showAllUI {
+  #goCenterUI, #showAllUI, #testCaseUI {
     background-color: #fff;
     border: 2px solid #fff;
     border-radius: 3px;
@@ -18,7 +18,7 @@ html, body {
     margin-bottom: 22px;
     text-align: center;
   }
-  #goCenterText, #showAllText {
+  #goCenterText, #showAllText, #testCaseText {
     color: rgb(25,25,25);
     font-family: Roboto,Arial,sans-serif;
     font-size: 15px;
@@ -26,6 +26,6 @@ html, body {
     padding-left: 5px;
     padding-right: 5px;
   }
-  #showAllUI {
+  #showAllUI, #testCaseUI {
     margin-left: 12px;
   }
