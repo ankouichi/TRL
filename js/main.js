@@ -1,10 +1,19 @@
-$(document).ready(function() {
+$(document).ready( function() {
     resizeWindow();
 
-    $(window).resize(function() {
+    $(window).resize( function() {
         resizeWindow();
       });
-})
+
+    $("#closeNav").click( function() {
+        $("#sidebar").width("0");
+    })
+
+    $(document).on('click', '.list-group-item', function() {
+        $(".list-group-item").removeClass("active");
+        $(this).addClass("active");
+    })
+});
 
 var map;
 var station_markers = [];
@@ -16,6 +25,11 @@ var accidentZoom = 14;
 var nodes;
 var node_markers = [];
 var node_limit = 3;
+
+const marker_type = {
+    STATION: 'station',
+    ACCIDENT: 'accident'
+}
 
 // ajust the map size accoding to the window size
 function resizeWindow(){
@@ -51,54 +65,10 @@ function CenterControl(controlDiv, map) {
     showAllUI.addEventListener('click', function() {
         setMapOnAll(map);
     });
-
-    /// TODO: Working on this part right now - March 11th, 2020
-    var testCaseUI = createControlDiv('testCaseUI', 'Click to show the test case', 
-    'testCaseText', 'Test Case');
-
-    controlDiv.appendChild(testCaseUI);
-    testCaseUI.addEventListener('click', function(){
-        var testLocation = {lat: 32.8891282215679, lng: -96.78695373535156};
-        map.setCenter(testLocation);
-        map.setZoom(accidentZoom);
-
-        if (accident_marker){
-            accident_marker.setMap(null);
-        }
-
-        accident_marker = new google.maps.Marker({
-            position: testLocation,
-            icon:'./img/jiaotongshigu.png',
-            map: map});
-
-        // show 4-nearest fire stations
-        setMapOnNearest(map, 4, testLocation);
-        // sort the nodes by distance with the accident spot
-        sortNodesByDistance(testLocation);
-        google.maps.event.addListener(accident_marker, 'click', function(){
-            if (node_limit - node_markers.length > 0){
-                var node = {lat: parseFloat(nodes[node_markers.length].Y), lng: parseFloat(nodes[node_markers.length].X)};
-                var node_marker = new google.maps.Marker({
-                    position: node,
-                    icon:'./img/add_location_2x.png',
-                    map: map});
-    
-                node_markers.push(node_marker);
-            } else{
-                for (var i = 0; i < node_markers.length; i++) {
-                    node_markers[i].setMap(null);
-                }
-
-                node_markers = [];
-            }
-        });
-        
-    });
-
-  }
+}
 
   // create Control Div with interior text and click function
-  function createControlDiv(id, title, text_id, text_inner_html){
+function createControlDiv(id, title, text_id, text_inner_html){
     // Set CSS for the control border
     var ui = document.createElement('div');
     ui.id = id;
@@ -111,7 +81,54 @@ function CenterControl(controlDiv, map) {
     ui.appendChild(text);
 
     return ui;
-  }
+}
+
+function createSideBarList(k){
+    var group = document.createElement('div');
+    group.setAttribute('class', 'list-group');
+    group.setAttribute('id', 'side-bar-list')
+
+    for (var i = 0; i < k; i++){
+        var anchor = document.createElement('a');
+        if (i === 0){
+            anchor.setAttribute("class", "list-group-item list-group-item-action flex-column align-items-start active");
+        } else{
+            anchor.setAttribute("class", "list-group-item list-group-item-action flex-column align-items-start");
+        }
+        anchor.setAttribute("href","#");
+
+        var div = document.createElement('div');
+        div.setAttribute("class", "d-flex w-100 justify-content-between");
+
+        var h5 = document.createElement('h5');
+        h5.setAttribute("class", "mb-1");
+        h5.innerText = station_markers[i].id;
+
+        var small = document.createElement('small');
+
+        if (i === 0){
+            small.innerText = 'the nearest';
+        }
+
+        div.appendChild(h5);
+        div.append(small);
+
+        var p = document.createElement('p');
+        p.setAttribute("class","mb-1");
+        p.innerText = station_markers[i].address;
+
+        var zipSmall = document.createElement('small');
+        zipSmall.innerText = station_markers[i].zip;
+
+        anchor.appendChild(div);
+        anchor.appendChild(p);
+        anchor.appendChild(zipSmall);
+
+        group.appendChild(anchor);
+    }
+
+    return group;
+}
 
 function initMap() {
     // The bounds of Dallas
@@ -126,6 +143,7 @@ function initMap() {
         document.getElementById('map'), {
             zoom: initialZoom,
             center: dallas,
+            mapTypeControl: false,
             restriction:{
                 latLngBounds: Dallas_BOUNDS,
                 strictBounds: false
@@ -174,7 +192,7 @@ function initMap() {
             position: accident,
             icon:'./img/jiaotongshigu.png',
             map: map});
-        addMarkerClickListener(accident_marker, concatSpotConStr());
+        addMarkerClickListener(accident_marker, marker_type.ACCIDENT);
 
         var accident_coords = {lat: accident.lat(), lng: accident.lng()};
         // Show k-nearest stations on the map, hidden the others.
@@ -182,6 +200,11 @@ function initMap() {
 
         map.setCenter({lat: accident.lat(), lng: accident.lng()});
         map.setZoom(accidentZoom);
+
+        $('#side-bar-list').remove();
+        var groupList = createSideBarList(4);
+        $('#closeNav').after(groupList);
+        $("#sidebar").css({"display": "block", "width": "400px"});
     });
 }
 
@@ -191,22 +214,24 @@ function addMarker(location, properties){
         position: location,
         map: map,
         icon:'./img/station.png',
-        animation: google.maps.Animation.DROP
+        animation: google.maps.Animation.DROP,
+        id: properties.ID,
+        address: properties.Address,
+        zip: properties.ZipCode
       });
 
     station_markers.push(marker);
-    addMarkerClickListener(marker, concatStatConStr(properties));
+    addMarkerClickListener(marker, marker_type.STATION);
 }
 
-function concatStatConStr(properties){
+function concatStatConStr(marker){
     var trucks = getRandomInt(10);
-
     var contentString = '<div id="content">'+
     '<div id="siteNotice">'+
     '</div>'+
-    '<h2 id="firstHeading" class="firstHeading">'+ properties.ID +
-    '</h2><div id="bodyContent"><p>' + properties.Address + 
-    ' , ' + properties.ZipCode + 
+    '<h2 id="firstHeading" class="firstHeading">'+ marker.id +
+    '</h2><div id="bodyContent"><p>' + marker.address + 
+    ' , ' + marker.zip + 
     '<p><a href="#">Trucks: ' + trucks +
     '</a></p></div></div>';
 
@@ -229,7 +254,14 @@ function concatSpotConStr(){
 }
 
 // Add a listener to a clicked marker
-function addMarkerClickListener(marker, conStr){
+function addMarkerClickListener(marker, type){
+    var conStr;
+    if (type === marker_type.STATION){
+        conStr = concatStatConStr(marker);
+    } else {
+        conStr = concatSpotConStr();
+    }
+    
     var infowindow = new google.maps.InfoWindow({
         content: conStr,
         maxwidth: 300
@@ -248,6 +280,12 @@ function addMarkerClickListener(marker, conStr){
 
 // Sets the map on nearest station markers
 // Approach One: Number - based
+/**
+ * 
+ * @param {*} map Google map object
+ * @param {*} k the number of stations shown
+ * @param {*} coords accident spot coordinate
+ */
 function setMapOnNearest(map, k, coords){
     clearMarkers();
 
@@ -271,6 +309,9 @@ function setMapOnNearest(map, k, coords){
 // TODO: Approach One: Radius - based
 
 // Sort the whole node list by the distance between the accident spot and each node
+/**
+ * @param {*} coords the coordinate of accident spot
+ */
 function sortNodesByDistance(coords){
     nodes.sort(function(a,b){
         a_lat_distance = a.Y - coords.lat;
@@ -310,4 +351,4 @@ function deleteMarkers() {
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
-  }
+}

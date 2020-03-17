@@ -6,16 +6,24 @@
     <title>TRL Map</title>
     <!-- <meta name='viewport' content='width=device-width, initial-scale=1'> -->
     <link rel='stylesheet' type='text/css' media='screen' href='css/main.css'>
+    <link rel="stylesheet" type="text/css" href="css/panel.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
 </head>
 <body>
-    
-    <div id="map">
+    <div id="container">
+        <div id="sidebar" class="sidenav">
+            <a href="javascript:void(0)" id="closeNav">&times;</a>
+        </div>
 
+        <div id="map"></div>
     </div>
+
     <script src="js/jquery/jquery.min.js"></script>
     <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYcq-3Zm24n3LA43dqHsW_ESakSSU_-_Y&callback=initMap">
     </script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
     <script src='js/main.js'></script>
 </body>
 </html>

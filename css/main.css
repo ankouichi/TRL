@@ -1,13 +1,11 @@
-#map {
-    height: 100%;
-  }
-
 html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+  #map {
     height: 100%;
-    margin: 0;
-    padding: 0;
   }
-
   #goCenterUI, #showAllUI, #testCaseUI {
     background-color: #fff;
     border: 2px solid #fff;
