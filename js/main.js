@@ -237,29 +237,22 @@ function addMarker(location, properties){
 
 function concatStatConStr(marker){
     var trucks = getRandomInt(10);
-    var contentString = '<div id="content">'+
-    '<div id="siteNotice">'+
-    '</div>'+
-    '<h2 id="firstHeading" class="firstHeading">'+ marker.id +
-    '</h2><div id="bodyContent"><p>' + marker.address + 
-    ' , ' + marker.zip + 
-    '<p><a href="#">Trucks: ' + trucks +
-    '</a></p></div></div>';
+    var contentString = '<div class="infowindow">'+
+    '<div class="title full-width">'+ marker.id +
+    '</div><div class="address"><div class="address-line full-width">' + marker.address + 
+    '</div><div class="address-line full-width">' + marker.zip + 
+    '</div></div><div class="truck"> Trucks: ' + trucks +
+    '</div></div>';
 
     return contentString; 
 }
 
-function concatSpotConStr(){
-    var contentString = '<div id="content">'+
-    '<div id="siteNotice">'+
-    '</div>'+
-    '<h2 id="firstHeading" class="firstHeading">This is an accident spot</h2>'+
-    '<div id="bodyContent">'+
-    '<p>Test Address 1 Info</p>'+
-    '<p>Test Address 2 Info</p>' +
-    '<p><a href="#">Test Links</a></p>'
-    '</div>'+
-    '</div>';
+function concatSpotConStr(marker){
+    var contentString = '<div class="infowindow">'+
+    '<div class="title full-width">'+ 'Accident Spot' +
+    '</div><div class="address"><div class="latlng full-width">' + 
+    marker.position.lat().toFixed(6) + ',' +  marker.position.lng().toFixed(6)
+    '</div></div></div>';
 
     return contentString; 
 }
@@ -270,7 +263,7 @@ function addMarkerClickListener(marker, type){
     if (type === marker_type.STATION){
         conStr = concatStatConStr(marker);
     } else {
-        conStr = concatSpotConStr();
+        conStr = concatSpotConStr(marker);
     }
     
     var infowindow = new google.maps.InfoWindow({

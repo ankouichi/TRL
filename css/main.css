@@ -27,3 +27,41 @@ html, body {
   #showAllUI, #testCaseUI {
     margin-left: 12px;
   }
+
+  .infowindow {
+    font: 400 11px Roboto, Arial, sans-serif;
+  }
+
+  .full-width {
+    width: 180px;
+  }
+
+  .infowindow .title {
+    overflow: hidden;
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .infowindow .address {
+    margin-top: 2px;
+    color: #555;
+  }
+
+  .infowindow .address-line {
+    color: #333;
+    font-family: Roboto,Arial;
+    font-size: 13px;
+    background-color: white;
+  }
+
+  .infowindow .latlng {
+    margin-top: 13px;
+    color: #333;
+    font-family: Roboto,Arial;
+    font-size: 13px;
+    background-color: white;
+  }
+
+  .truck {
+    margin-top: 1px;
+  }
