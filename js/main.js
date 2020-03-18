@@ -8,11 +8,18 @@ $(document).ready( function() {
     $("#closeNav").click( function() {
         $("#sidebar").width("0");
     })
+});
 
-    $(document).on('click', '.list-group-item', function() {
-        $(".list-group-item").removeClass("active");
-        $(this).addClass("active");
-    })
+$(document).on('click', '.list-group-item', function() {
+    $(".list-group-item").removeClass("active");
+    $(this).addClass("active");
+
+    var index = $(this).index();
+    // trigger the click event on station marker of this index
+    google.maps.event.trigger(station_markers[index], 'click');
+
+    // sort the nodes by distance with the accident spot
+    sortNodesByDistance({lat: accident_marker.position.lat(), lng: accident_marker.position.lng()});
 });
 
 var map;
@@ -187,6 +194,10 @@ function initMap() {
             accident_marker = null;
         }
 
+        if (info_window){
+            info_window.close();
+        }
+
         accident = event.latLng;
         accident_marker = new google.maps.Marker({
             position: accident,
@@ -204,7 +215,7 @@ function initMap() {
         $('#side-bar-list').remove();
         var groupList = createSideBarList(4);
         $('#closeNav').after(groupList);
-        $("#sidebar").css({"display": "block", "width": "400px"});
+        $("#sidebar").css({"display": "block", "width": "350px"});
     });
 }
 
