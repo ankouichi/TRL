@@ -7,7 +7,7 @@ $(document).ready( function() {
 
     $("#closeNav").click( function() {
         $("#sidebar").width("0");
-    })
+    });
 });
 
 $(document).on('click', '.list-group-item', function() {
@@ -93,7 +93,7 @@ function createControlDiv(id, title, text_id, text_inner_html){
 function createSideBarList(k){
     var group = document.createElement('div');
     group.setAttribute('class', 'list-group');
-    group.setAttribute('id', 'side-bar-list')
+    group.setAttribute('id', 'side-bar-list');
 
     for (var i = 0; i < k; i++){
         var anchor = document.createElement('a');
@@ -156,7 +156,7 @@ function initMap() {
                 strictBounds: false
             },
             mapTypeId: 'roadmap' // roadmap,satellite,terrain,hybrid
-        });
+    });
 
     // Create the DIV to hold the control and call the CenterControl()
     // constructor passing in this DIV.
@@ -216,6 +216,8 @@ function initMap() {
         var groupList = createSideBarList(4);
         $('#closeNav').after(groupList);
         $("#sidebar").css({"display": "block", "width": "350px"});
+
+        google.maps.event.trigger(station_markers[0], 'click');
     });
 }
 
@@ -254,7 +256,7 @@ function concatSpotConStr(marker){
     marker.position.lat().toFixed(6) + ',' +  marker.position.lng().toFixed(6)
     '</div></div></div>';
 
-    return contentString; 
+    return contentString;
 }
 
 // Add a listener to a clicked marker
@@ -355,4 +357,16 @@ function deleteMarkers() {
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
+}
+
+function haversine_distance(mk1, mk2) {
+    // R = 6371.0710 kms
+    var R = 3958.8; // Radius of the Earth in miles
+    var rlat1 = mk1.position.lat() * (Math.PI/180); // Convert degrees to radians
+    var rlat2 = mk2.position.lat() * (Math.PI/180); // Convert degrees to radians
+    var difflat = rlat2-rlat1; // Radian difference (latitudes)
+    var difflon = (mk2.position.lng()-mk1.position.lng()) * (Math.PI/180); // Radian difference (longitudes)
+
+    var d = 2 * R * Math.asin(Math.sqrt(Math.sin(difflat/2)*Math.sin(difflat/2)+Math.cos(rlat1)*Math.cos(rlat2)*Math.sin(difflon/2)*Math.sin(difflon/2)));
+    return d;
 }
