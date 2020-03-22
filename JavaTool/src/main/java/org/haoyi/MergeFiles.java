@@ -1,6 +1,7 @@
 package org.haoyi;
 
-import org.apache.poi.ss.usermodel.Row;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.haoyi.entity.Link;
 import org.haoyi.entity.Point;
 import org.xml.sax.SAXException;
 import javax.xml.parsers.*;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.haoyi.util.ExcelUtil.parsePointsXlsx;
+import static org.haoyi.util.XmlUtil.parseLinksXML;
 
 /**
  * Read data from XML to POJO
@@ -16,32 +18,29 @@ import static org.haoyi.util.ExcelUtil.parsePointsXlsx;
  */
 public class MergeFiles
 {
+    static String EXCEL_LOC =  "C:\\Points.xlsx";
+    static String XML_LOC =  "C:\\Links.xml";
+    static String JSON_LOC = "C:\\Users\\Daniel\\Documents\\Directions.json";
+
     public static void main( String[] args ) throws IOException, SAXException, ParserConfigurationException {
-        String excelLoc = "C:\\Points.xlsx";
-//        String xmlLoc = "C:\\Links.xml";
-//
-//        List<Link> links = parseLinksXML(xmlLoc);
-//
-//        for(int i = 0; i < links.size(); i++){
-//            Link link = links.get(i);
-//            System.out.println("");
-//            System.out.println("link id: " + link.getId());
-//            System.out.println("link upstream: " + link.getUpStream());
-//            System.out.println("link downstream: " + link.getDownStream());
-//            System.out.println("link direction id: " + link.getDirectionId());
-//        }
-//
-//        System.out.println("");
-//        System.out.println("Number of links: " + links.size());
+        List<Link> links = parseLinksXML(XML_LOC);
+        Map<Integer, List<Point>> map = parsePointsXlsx(EXCEL_LOC);
 
-        Map<Integer, List<Point>> map = parsePointsXlsx(excelLoc);
+        for (Link link : links) {
+            List<Point> points = map.get(link.getDirectionId());
+            link.setPoints(points);
+        }
 
-        for (Integer key : map.keySet()) {
-            System.out.println("Direction Id: " + key);
-            for(Point p : map.get(key)) {
-                System.out.println(p.getLat() + "," + p.getLng());
-            }
-            System.out.println("");
+        FileWriter fw = new FileWriter(JSON_LOC);
+        try{
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonStr = mapper.writeValueAsString(links);
+            fw.write(jsonStr);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            fw.flush();
+            fw.close();
         }
     }
 }
