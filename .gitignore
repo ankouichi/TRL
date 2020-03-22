@@ -1,3 +1,6 @@
 /node_modules/*
 http.js
 package-lock.json
+
+/JavaTool/target/*
+/JavaTool/.idea/*
