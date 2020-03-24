@@ -359,14 +359,53 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
 }
 
-function haversine_distance(mk1, mk2) {
+function haversine_distance(point1, point2) {
     // R = 6371.0710 kms
     var R = 3958.8; // Radius of the Earth in miles
-    var rlat1 = mk1.position.lat() * (Math.PI/180); // Convert degrees to radians
-    var rlat2 = mk2.position.lat() * (Math.PI/180); // Convert degrees to radians
-    var difflat = rlat2-rlat1; // Radian difference (latitudes)
-    var difflon = (mk2.position.lng()-mk1.position.lng()) * (Math.PI/180); // Radian difference (longitudes)
-
-    var d = 2 * R * Math.asin(Math.sqrt(Math.sin(difflat/2)*Math.sin(difflat/2)+Math.cos(rlat1)*Math.cos(rlat2)*Math.sin(difflon/2)*Math.sin(difflon/2)));
+    var φ1 = point1.lat * (Math.PI / 180);    // convert degree to radian
+    var φ2 = point2.lat * (Math.PI / 180);    // convert degree to radian
+    var Δφ = φ2 - φ1;
+    var Δλ = (point2.lng - point1.lng) * (Math.PI / 180);
+    
+    var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    
+    var d = R * c;
     return d;
+}
+
+/**
+ * Heron Formular for area of triangle
+ * @param {*} edge1 edge1
+ * @param {*} edge2 edge2
+ * @param {*} edge3 edge3
+ */
+function heron_formular(edge1,edge2,edge3){
+    var p = (edge1 + edge2 + edge3) / 2;
+    var area = Math.sqrt(p * (p - edge1) * (p - edge2) * (p - edge3));
+    return area;
+}
+
+/**
+ * Get distance from pointA to segment based on PointB and PointC
+ * @param {*} pointA target point
+ * @param {*} pointB segment vertex
+ * @param {*} pointC segment vertex
+ */
+function get_distance(pointA, pointB, pointC){
+    var edgeA = haversine_distance(pointB, pointC);
+    var edgeB = haversine_distance(pointA, pointC);
+    var edgeC = haversine_distance(pointA, pointB);
+
+    if (edgeC * edgeC + edgeA * edgeA <= edgeB * edgeB) {
+        return edgeC;
+    }
+
+    if (edgeB * edgeB + edgeA * edgeA <= edgeC * edgeC) {
+        return edgeB;
+    }
+
+    return 2 * heron_formular(edgeA, edgeB, edgeC) / edgeA;
 }

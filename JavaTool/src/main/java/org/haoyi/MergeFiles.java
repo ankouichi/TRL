@@ -2,7 +2,9 @@ package org.haoyi;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.haoyi.entity.Link;
+import org.haoyi.entity.OdPair;
 import org.haoyi.entity.Point;
+import org.haoyi.util.JsonUtil;
 import org.xml.sax.SAXException;
 import javax.xml.parsers.*;
 import java.io.*;
@@ -23,24 +25,36 @@ public class MergeFiles
     static String JSON_LOC = "C:\\Users\\Daniel\\Documents\\Directions.json";
 
     public static void main( String[] args ) throws IOException, SAXException, ParserConfigurationException {
-        List<Link> links = parseLinksXML(XML_LOC);
-        Map<Integer, List<Point>> map = parsePointsXlsx(EXCEL_LOC);
+//        List<Link> links = parseLinksXML(XML_LOC);
+//        Map<Integer, List<Point>> map = parsePointsXlsx(EXCEL_LOC);
+//
+//        for (Link link : links) {
+//            List<Point> points = map.get(link.getDirectionId());
+//            link.setPoints(points);
+//        }
+//
+//        FileWriter fw = new FileWriter(JSON_LOC);
+//        try{
+//            ObjectMapper mapper = new ObjectMapper();
+//            String jsonStr = mapper.writeValueAsString(links);
+//            fw.write(jsonStr);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } finally {
+//            fw.flush();
+//            fw.close();
+//        }
 
-        for (Link link : links) {
-            List<Point> points = map.get(link.getDirectionId());
-            link.setPoints(points);
+        String actualJsonFile = "C:\\Users\\Daniel\\Documents\\GitHub\\TRL\\doc\\outShortestPath.json";
+        List<OdPair> pairs = JsonUtil.readJsonFile(actualJsonFile);
+
+        for (OdPair pair : pairs) {
+            String linkStr = pair.getLinkStr();
+            String[] splitted = linkStr.split("n", 0);
+            pair.setUpStream(Integer.parseInt(splitted[1]));
+            pair.setDownStream(Integer.parseInt(splitted[2]));
         }
 
-        FileWriter fw = new FileWriter(JSON_LOC);
-        try{
-            ObjectMapper mapper = new ObjectMapper();
-            String jsonStr = mapper.writeValueAsString(links);
-            fw.write(jsonStr);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            fw.flush();
-            fw.close();
-        }
+        JsonUtil.writeJsonFile(actualJsonFile, pairs);
     }
 }
