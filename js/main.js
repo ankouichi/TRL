@@ -31,7 +31,9 @@ var initialZoom = 11;
 var accidentZoom = 14;
 var nodes;
 var node_markers = [];
-var node_limit = 3;
+var node_inside = [];
+var circle;
+var radius = 1610 // 5633 meters = 3.5 miles, 4828 meters = 3 miles, 3219 meters = 2 miles, 1610 meters = 1 mile
 
 const marker_type = {
     STATION: 'station',
@@ -64,13 +66,13 @@ function CenterControl(controlDiv, map) {
     goCenterUI.addEventListener('click', function() {
         map.setCenter(dallas);
         map.setZoom(initialZoom);
-        setMapOnAll(map);
+        setMapOnAll(map, station_markers);
       });
 
     // Set up the click event listener for 'Show All':
     // Show all hidden fire stations on the map.
     showAllUI.addEventListener('click', function() {
-        setMapOnAll(map);
+        setMapOnAll(map, station_markers);
     });
 }
 
@@ -182,7 +184,7 @@ function initMap() {
     });
 
     // Fetch nodes info
-    $.getJSON("./js/nodes.json", function (data){
+    $.getJSON("./js/nodes-new.json", function (data){
         nodes = data;
     });
     
@@ -207,17 +209,49 @@ function initMap() {
 
         var accident_coords = {lat: accident.lat(), lng: accident.lng()};
         // Show k-nearest stations on the map, hidden the others.
-        setMapOnNearest(map, 4, accident_coords);
+        setMapOnNearest(map, 4, accident_coords, station_markers);
 
         map.setCenter({lat: accident.lat(), lng: accident.lng()});
         map.setZoom(accidentZoom);
 
-        $('#side-bar-list').remove();
-        var groupList = createSideBarList(4);
-        $('#closeNav').after(groupList);
-        $("#sidebar").css({"display": "block", "width": "350px"});
+        // $('#side-bar-list').remove();
+        // var groupList = createSideBarList(4);
+        // $('#closeNav').after(groupList);
+        // $("#sidebar").css({"display": "block", "width": "350px"});
 
-        google.maps.event.trigger(station_markers[0], 'click');
+        // google.maps.event.trigger(station_markers[0], 'click');
+
+        if (circle){
+            circle.setMap(null);
+        }
+
+        deleteMarkers(node_markers);
+
+        // Add a circle centered on the clicked point
+        circle = new google.maps.Circle({
+            strokeColor: '#FF0000',
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: '#FF0000',
+            fillOpacity: 0.35,
+            map: map,
+            center: accident,
+            radius: radius
+        });
+
+        // check which nodes are inside the circle
+        for (var i = 0; i < nodes.length; i++){
+            if (haversine_distance(accident_coords, nodes[i]) * 1000 <= radius) {
+                node_inside.push(nodes[i]);
+                var node_marker = new google.maps.Marker({
+                    position: nodes[i],
+                    icon:'./img/add_location_2x.png',
+                    map: map
+                })
+
+                node_markers.push(node_marker);
+            }
+        }
     });
 }
 
@@ -292,10 +326,10 @@ function addMarkerClickListener(marker, type){
  * @param {*} k the number of stations shown
  * @param {*} coords accident spot coordinate
  */
-function setMapOnNearest(map, k, coords){
-    clearMarkers();
+function setMapOnNearest(map, k, coords, markers){
+    clearMarkers(markers);
 
-    station_markers.sort(function(a,b){
+    markers.sort(function(a,b){
         a_lat_distance = a.position.lat() - coords.lat;
         a_lng_distance = a.position.lng() - coords.lng;
         a_l2_distance = Math.sqrt(a_lat_distance * a_lat_distance + a_lng_distance * a_lng_distance);
@@ -308,11 +342,9 @@ function setMapOnNearest(map, k, coords){
     });
 
     for (var i = 0; i < k; i++){
-        station_markers[i].setMap(map);
+        markers[i].setMap(map);
     }
 }
-
-// TODO: Approach One: Radius - based
 
 // Sort the whole node list by the distance between the accident spot and each node
 /**
@@ -320,12 +352,12 @@ function setMapOnNearest(map, k, coords){
  */
 function sortNodesByDistance(coords){
     nodes.sort(function(a,b){
-        a_lat_distance = a.Y - coords.lat;
-        a_lng_distance = a.X - coords.lng;
+        a_lat_distance = a.lat - coords.lat;
+        a_lng_distance = a.lng - coords.lng;
         a_l2_distance = Math.sqrt(a_lat_distance * a_lat_distance + a_lng_distance * a_lng_distance);
 
-        b_lat_distance = b.Y - coords.lat;
-        b_lng_distance = b.X - coords.lng;
+        b_lat_distance = b.lat - coords.lat;
+        b_lng_distance = b.lng - coords.lng;
         b_l2_distance = Math.sqrt(b_lat_distance * b_lat_distance + b_lng_distance * b_lng_distance);
 
         return a_l2_distance - b_l2_distance
@@ -333,26 +365,26 @@ function sortNodesByDistance(coords){
 }
 
 // Sets the map on all markers in the array.
-function setMapOnAll(map) {
-    for (var i = 0; i < station_markers.length; i++) {
-        station_markers[i].setMap(map);
+function setMapOnAll(map, markers) {
+    for (var i = 0; i < markers.length; i++) {
+        markers[i].setMap(map);
     }
 }
 
 // Removes the markers from the map, but keeps them in the array.
-function clearMarkers() {
-    setMapOnAll(null);
+function clearMarkers(markers) {
+    setMapOnAll(null, markers);
 }
 
 // Shows any markers currently in the array.
-function showMarkers() {
-    setMapOnAll(map);
+function showMarkers(markers) {
+    setMapOnAll(map, markers);
 }
 
 // Deletes all markers in the array by removing references to them.
-function deleteMarkers() {
-    clearMarkers();
-    station_markers = [];
+function deleteMarkers(markers) {
+    clearMarkers(markers);
+    markers = [];
 }
 
 function getRandomInt(max) {
@@ -360,8 +392,8 @@ function getRandomInt(max) {
 }
 
 function haversine_distance(point1, point2) {
-    // R = 6371.0710 kms
-    var R = 3958.8; // Radius of the Earth in miles
+    var R = 6371.0710//kms
+    //var R = 3958.8; // Radius of the Earth in miles
     var φ1 = point1.lat * (Math.PI / 180);    // convert degree to radian
     var φ2 = point2.lat * (Math.PI / 180);    // convert degree to radian
     var Δφ = φ2 - φ1;
