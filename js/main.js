@@ -36,6 +36,7 @@ var circle;
 var radius = 1610 // 5633 meters = 3.5 miles, 4828 meters = 3 miles, 3219 meters = 2 miles, 1610 meters = 1 mile
 var paths;
 var paths_potential = [];
+var polylines = [];
 
 const marker_type = {
     STATION: 'station',
@@ -194,10 +195,6 @@ function initMap() {
     $.getJSON("./js/paths.json", function (data){
         paths = data;
     });
-    // $.getJSON("./js/paths-origin.json", function (data){
-    //     paths = data;
-    // });
-
 
     // place a marker on the map where the user clicks
     google.maps.event.addListener(map, 'click', function(event){
@@ -237,6 +234,7 @@ function initMap() {
         }
 
         deleteMarkers(node_markers);
+        deleteMarkers(polylines);
         paths_potential = [];
         nodes_inside = [];
 
@@ -256,13 +254,6 @@ function initMap() {
         for (var i = 0; i < nodes.length; i++){
             if (haversine_distance(accident_coords, nodes[i]) * 1000 <= radius) {
                 nodes_inside.push(nodes[i]);
-                // var node_marker = new google.maps.Marker({
-                //     position: nodes[i],
-                //     icon:'./img/add_location_2x.png',
-                //     map: map
-                // })
-
-                // node_markers.push(node_marker);
             }
         }
 
@@ -275,26 +266,49 @@ function initMap() {
                     var temp_distances = [];
                     for (var k = 0; k < points.length - 1; k++){
                         var temp_distance = get_distance(accident_coords, points[k], points[k + 1]);
-                        temp_distances.push(temp_distance);
+                        temp_distances.push({distance: temp_distance, up: points[k], down: points[k + 1]});
                     }
 
-                    var nearest = Math.min(...temp_distances);
-                    paths_potential.push({linkId: paths[j].LinkID, distance: nearest, number: i});
+                    var nearestSeg = getNearestSegment(temp_distances);
+                    paths_potential.push({linkId: paths[j].LinkID, distance: nearestSeg.distance, number: i,
+                         points: paths[j].points, up: nearestSeg.up, down: nearestSeg.down});
                 }
             }
         }
 
         var nearestPath = getNearestPath();
-        // console.log(nearestPath.linkId);
-        // console.log(nearestPath.distance);
-
         var node_marker = new google.maps.Marker({
             position: nodes_inside[nearestPath.number],
             icon:'./img/add_location_2x.png',
             map: map
         })
 
+        var seg_up_marker = new google.maps.Marker({
+            position: nearestPath.up,
+            icon:'./img/mediate-location.png',
+            map: map
+        })
+
+        var seg_down_marker = new google.maps.Marker({
+            position: nearestPath.down,
+            icon:'./img/mediate-location.png',
+            map: map
+        })
+
         node_markers.push(node_marker);
+        node_markers.push(seg_up_marker);
+        node_markers.push(seg_down_marker);
+
+        var targetPath = new google.maps.Polyline({
+            path: nearestPath.points,
+            geodesic: true,
+            strokeColor: '#FF0000',
+            strokeOpacity: 1.0,
+            strokeWeight: 2
+          });
+  
+        targetPath.setMap(map);
+        polylines.push(targetPath);
     });
 }
 
@@ -405,6 +419,14 @@ function sortNodesByDistance(coords){
 
         return a_l2_distance - b_l2_distance
     });
+}
+
+function getNearestSegment(segments){
+    segments.sort(function(a,b){
+        return a.distance - b.distance;
+    });
+
+    return segments[0];
 }
 
 function getNearestPath(){
