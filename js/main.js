@@ -31,9 +31,11 @@ var initialZoom = 11;
 var accidentZoom = 14;
 var nodes;
 var node_markers = [];
-var node_inside = [];
+var nodes_inside = [];
 var circle;
 var radius = 1610 // 5633 meters = 3.5 miles, 4828 meters = 3 miles, 3219 meters = 2 miles, 1610 meters = 1 mile
+var paths;
+var paths_potential = [];
 
 const marker_type = {
     STATION: 'station',
@@ -169,7 +171,7 @@ function initMap() {
     centerControlDiv.style['padding-top'] = '10px';
     map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
 
-    // Fetch fire stations 
+    // Obtain fire stations 
     $.ajax({
         url: "./js/station_GeoJSON.js",
         dataType: 'json',
@@ -183,11 +185,20 @@ function initMap() {
         }
     });
 
-    // Fetch nodes info
+    // Obtain nodes info
     $.getJSON("./js/nodes-new.json", function (data){
         nodes = data;
     });
-    
+
+    // Obtain paths info
+    $.getJSON("./js/paths.json", function (data){
+        paths = data;
+    });
+    // $.getJSON("./js/paths-origin.json", function (data){
+    //     paths = data;
+    // });
+
+
     // place a marker on the map where the user clicks
     google.maps.event.addListener(map, 'click', function(event){
         // Bug fix: remove accident marker if exists.
@@ -226,6 +237,8 @@ function initMap() {
         }
 
         deleteMarkers(node_markers);
+        paths_potential = [];
+        nodes_inside = [];
 
         // Add a circle centered on the clicked point
         circle = new google.maps.Circle({
@@ -242,16 +255,46 @@ function initMap() {
         // check which nodes are inside the circle
         for (var i = 0; i < nodes.length; i++){
             if (haversine_distance(accident_coords, nodes[i]) * 1000 <= radius) {
-                node_inside.push(nodes[i]);
-                var node_marker = new google.maps.Marker({
-                    position: nodes[i],
-                    icon:'./img/add_location_2x.png',
-                    map: map
-                })
+                nodes_inside.push(nodes[i]);
+                // var node_marker = new google.maps.Marker({
+                //     position: nodes[i],
+                //     icon:'./img/add_location_2x.png',
+                //     map: map
+                // })
 
-                node_markers.push(node_marker);
+                // node_markers.push(node_marker);
             }
         }
+
+        // obtain paths to every node within the circle
+        for (var i = 0; i < nodes_inside.length; i++){
+            var downStream = nodes_inside[i];   // node destination
+            for (var j = 0; j < paths.length; j++){
+                if (paths[j].downStream === downStream.id){
+                    var points = paths[j].points;
+                    var temp_distances = [];
+                    for (var k = 0; k < points.length - 1; k++){
+                        var temp_distance = get_distance(accident_coords, points[k], points[k + 1]);
+                        temp_distances.push(temp_distance);
+                    }
+
+                    var nearest = Math.min(...temp_distances);
+                    paths_potential.push({linkId: paths[j].LinkID, distance: nearest, number: i});
+                }
+            }
+        }
+
+        var nearestPath = getNearestPath();
+        // console.log(nearestPath.linkId);
+        // console.log(nearestPath.distance);
+
+        var node_marker = new google.maps.Marker({
+            position: nodes_inside[nearestPath.number],
+            icon:'./img/add_location_2x.png',
+            map: map
+        })
+
+        node_markers.push(node_marker);
     });
 }
 
@@ -362,6 +405,14 @@ function sortNodesByDistance(coords){
 
         return a_l2_distance - b_l2_distance
     });
+}
+
+function getNearestPath(){
+    paths_potential.sort(function(a,b){
+        return a.distance - b.distance;
+    });
+
+    return paths_potential[0];
 }
 
 // Sets the map on all markers in the array.

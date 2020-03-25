@@ -1,15 +1,12 @@
 package org.haoyi;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.haoyi.entity.*;
 import org.haoyi.util.JsonUtil;
 import org.xml.sax.SAXException;
 import javax.xml.parsers.*;
-import java.awt.geom.Arc2D;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static org.haoyi.util.ExcelUtil.parsePointsXlsx;
 import static org.haoyi.util.XmlUtil.parseLinksXML;
@@ -59,20 +56,64 @@ public class MergeFiles
 
         String nodeFile = "C:\\Users\\Daniel\\Documents\\GitHub\\TRL\\js\\nodes.json";
         String nodeNeoFile = "C:\\Users\\Daniel\\Documents\\GitHub\\TRL\\js\\nodes-new.json";
-        List<Node> nodes = JsonUtil.readNodeJsonFile((nodeFile));
+        String linkFile = "C:\\Users\\Daniel\\Documents\\GitHub\\TRL\\js\\links.json";
+        String pathFile = "C:\\Users\\Daniel\\Documents\\GitHub\\TRL\\js\\paths-origin.json";
+//        List<Node> nodes = JsonUtil.readNodeJsonFile((nodeFile));
+//
+//        List<NodeNeo> nodeNeos = new ArrayList<>();
+//        for (Node node : nodes){
+//            NodeNeo nodeNeo = new NodeNeo();
+//            nodeNeo.setId(Integer.parseInt(node.getId()));
+//            nodeNeo.setLat(Double.parseDouble(node.getY()));
+//            nodeNeo.setLng(Double.parseDouble(node.getX()));
+//            nodeNeo.setZone(Integer.parseInt(node.getZone()));
+//            nodeNeos.add(nodeNeo);
+//        }
+//
+//        JsonUtil.writeNodeJsonFile(nodeNeoFile, nodeNeos);
 
-        List<NodeNeo> nodeNeos = new ArrayList<>();
-        for (Node node : nodes){
-            NodeNeo nodeNeo = new NodeNeo();
-            nodeNeo.setId(Integer.parseInt(node.getId()));
-            nodeNeo.setLat(Double.parseDouble(node.getY()));
-            nodeNeo.setLng(Double.parseDouble(node.getX()));
-            nodeNeo.setZone(Integer.parseInt(node.getZone()));
-            nodeNeos.add(nodeNeo);
+        List<Link> links = JsonUtil.readLinkJsonFile(linkFile);
+        List<OdPair> pairs = JsonUtil.readJsonFile(pathFile);
+
+        for(OdPair pair : pairs){
+            String nodeStr = pair.getNodeStr();
+
+            nodeStr = nodeStr.replaceAll("] \\[", ", ").replaceAll("\\[", "").replaceAll("]","");
+            nodeStr = nodeStr.replaceAll("n", "").replaceAll(" ", "");
+            String[] splittedNodeStr = nodeStr.split(",", 0);
+
+            List<Point> points = new ArrayList<>();
+
+            for(int i = 0; i < splittedNodeStr.length - 1; i++){
+                if (splittedNodeStr[i].equals(splittedNodeStr[i + 1])){
+                    continue;
+                }
+
+                for (Link link : links){
+//                    if(splittedNodeStr[i].equals("") || splittedNodeStr[i+1].equals("")){
+//                        System.out.println(pair.getLinkStr());
+//                    }
+
+                    if (link.getUpStream() == Integer.parseInt(splittedNodeStr[i]) &&
+                    link.getDownStream() == Integer.parseInt(splittedNodeStr[i + 1])){
+                        List<Point> mediates = link.getPoints();
+//                        if(points.size() > 0){
+//                            if (mediates.size() == 0){
+//                                int id = link.getId();
+//                                System.out.println(id);
+//                            }
+//                            mediates.remove(0);
+//                        }
+                        points.addAll(mediates);
+                    }
+                }
+            }
+
+            pair.setPoints(points);
         }
 
-        JsonUtil.writeNodeJsonFile(nodeNeoFile, nodeNeos);
+        String pathJsonFile = "C:\\Users\\Daniel\\Documents\\GitHub\\TRL\\js\\paths.json";
 
-        System.out.println(" ");
+        JsonUtil.writeJsonFile(pathJsonFile, pairs);
     }
 }

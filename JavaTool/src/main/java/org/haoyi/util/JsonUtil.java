@@ -1,6 +1,7 @@
 package org.haoyi.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.haoyi.entity.Link;
 import org.haoyi.entity.Node;
 import org.haoyi.entity.NodeNeo;
 import org.haoyi.entity.OdPair;
@@ -30,5 +31,10 @@ public class JsonUtil {
     public static void writeNodeJsonFile(String file, List<NodeNeo> nodeNeos) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(new File(file), nodeNeos);
+    }
+
+    public static List<Link> readLinkJsonFile(String file) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        return Arrays.asList(mapper.readValue(new File(file), Link[].class));
     }
 }

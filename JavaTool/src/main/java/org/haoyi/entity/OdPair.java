@@ -2,6 +2,8 @@ package org.haoyi.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.List;
+
 public class OdPair {
     @JsonProperty("TravelTime")
     private double travelTime;
@@ -17,6 +19,8 @@ public class OdPair {
 
     private int upStream;
     private int downStream;
+
+    private List<Point> points;
 
     public double getTravelTime() {
         return travelTime;
@@ -64,5 +68,13 @@ public class OdPair {
 
     public void setDownStream(int downStream) {
         this.downStream = downStream;
+    }
+
+    public List<Point> getPoints() {
+        return points;
+    }
+
+    public void setPoints(List<Point> points) {
+        this.points = points;
     }
 }
