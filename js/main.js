@@ -19,7 +19,7 @@ $(document).on('click', '.list-group-item', function() {
     google.maps.event.trigger(station_markers[index], 'click');
 
     // sort the nodes by distance with the accident spot
-    sortNodesByDistance({lat: accident_marker.position.lat(), lng: accident_marker.position.lng()});
+    //sortNodesByDistance({lat: accident_marker.position.lat(), lng: accident_marker.position.lng()});
 });
 
 var map;
@@ -37,6 +37,8 @@ var radius = 1610 // 5633 meters = 3.5 miles, 4828 meters = 3 miles, 3219 meters
 var paths;
 var paths_potential = [];
 var polylines = [];
+var colors = ['#0333FF', '#FF0703', '#0CFF03', '#FFC300', '#581845'];
+var closest_paths = [];
 
 const marker_type = {
     STATION: 'station',
@@ -117,10 +119,6 @@ function createSideBarList(k){
         h5.innerText = station_markers[i].id;
 
         var small = document.createElement('small');
-
-        if (i === 0){
-            small.innerText = 'the nearest';
-        }
 
         div.appendChild(h5);
         div.append(small);
@@ -222,13 +220,6 @@ function initMap() {
         map.setCenter({lat: accident.lat(), lng: accident.lng()});
         map.setZoom(accidentZoom);
 
-        // $('#side-bar-list').remove();
-        // var groupList = createSideBarList(4);
-        // $('#closeNav').after(groupList);
-        // $("#sidebar").css({"display": "block", "width": "350px"});
-
-        // google.maps.event.trigger(station_markers[0], 'click');
-
         if (circle){
             circle.setMap(null);
         }
@@ -239,16 +230,16 @@ function initMap() {
         nodes_inside = [];
 
         // Add a circle centered on the clicked point
-        circle = new google.maps.Circle({
-            strokeColor: '#FF0000',
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            fillColor: '#FF0000',
-            fillOpacity: 0.35,
-            map: map,
-            center: accident,
-            radius: radius
-        });
+        // circle = new google.maps.Circle({
+        //     strokeColor: '#FF0000',
+        //     strokeOpacity: 0.8,
+        //     strokeWeight: 2,
+        //     fillColor: '#FF0000',
+        //     fillOpacity: 0.35,
+        //     map: map,
+        //     center: accident,
+        //     radius: radius
+        // });
 
         // check which nodes are inside the circle
         for (var i = 0; i < nodes.length; i++){
@@ -276,40 +267,60 @@ function initMap() {
             }
         }
 
-        var nearestPath = getNearestPath();
-        var node_marker = new google.maps.Marker({
-            position: nodes_inside[nearestPath.number],
-            icon:'./img/add_location_2x.png',
-            map: map
-        })
+        // get closest paths
+        getClosestPaths();
 
-        var seg_up_marker = new google.maps.Marker({
-            position: nearestPath.up,
-            icon:'./img/mediate-location.png',
-            map: map
-        })
+        // Show these closest path
+        $('#side-bar-list').remove();
+        var groupList = createSideBarList(closest_paths.length);
+        $('#closeNav').after(groupList);
+        $("#sidebar").css({"display": "block", "width": "350px"});
+        google.maps.event.trigger(station_markers[0], 'click');
 
-        var seg_down_marker = new google.maps.Marker({
-            position: nearestPath.down,
-            icon:'./img/mediate-location.png',
-            map: map
-        })
-
-        node_markers.push(node_marker);
-        node_markers.push(seg_up_marker);
-        node_markers.push(seg_down_marker);
-
-        var targetPath = new google.maps.Polyline({
-            path: nearestPath.points,
-            geodesic: true,
-            strokeColor: '#FF0000',
-            strokeOpacity: 1.0,
-            strokeWeight: 2
-          });
-  
-        targetPath.setMap(map);
-        polylines.push(targetPath);
+        // Draw polyline path
+        drawPath(0, map);
     });
+}
+
+function drawPath(path_idx,map){
+    // var node_marker = new google.maps.Marker({
+    //     position: nodes_inside[closest_paths[i].number],
+    //     icon:'./img/add_location_2x.png',
+    //     map: map
+    // })
+
+    // node_markers.push(node_marker);
+
+    var points = closest_paths[path_idx].points;
+    var upIdx = points.indexOf(closest_paths[path_idx].up);
+    var downIdx = points.indexOf(closest_paths[path_idx].down);
+    var correct_path = points.slice(0,downIdx + 1);
+
+    var targetPath = new google.maps.Polyline({
+        path: correct_path,
+        geodesic: true,
+        strokeColor: '#FF0000',
+        strokeOpacity: 1.0,
+        strokeWeight: 2
+    });
+      
+    targetPath.setMap(map);
+    polylines.push(targetPath);
+
+    var seg_up_marker = new google.maps.Marker({
+        position: closest_paths[path_idx].up,
+        icon:'./img/mediate-location.png',
+        map: map
+    })
+
+    var seg_down_marker = new google.maps.Marker({
+        position: closest_paths[path_idx].down,
+        icon:'./img/mediate-location.png',
+        map: map
+    })
+
+    node_markers.push(seg_up_marker);
+    node_markers.push(seg_down_marker);
 }
 
 // Adds a marker to the map and push to the array.
@@ -429,12 +440,20 @@ function getNearestSegment(segments){
     return segments[0];
 }
 
-function getNearestPath(){
+function getClosestPaths(){
+    closest_paths = [];
+
     paths_potential.sort(function(a,b){
         return a.distance - b.distance;
     });
 
-    return paths_potential[0];
+    for (var i = 0; i < paths_potential.length; i++){
+        if (paths_potential[i].distance !== paths_potential[0].distance){
+            break;
+        }
+
+        closest_paths.push(paths_potential[i])
+    }
 }
 
 // Sets the map on all markers in the array.
