@@ -16,7 +16,7 @@ $(document).on('click', '.list-group-item', function() {
 
     var index = $(this).index();
     // trigger the click event on station marker of this index
-    google.maps.event.trigger(station_markers[index], 'click');
+    google.maps.event.trigger(station_markers[target_station_ids[index]], 'click');
 
     // sort the nodes by distance with the accident spot
     //sortNodesByDistance({lat: accident_marker.position.lat(), lng: accident_marker.position.lng()});
@@ -39,6 +39,7 @@ var paths_potential = [];
 var polylines = [];
 var colors = ['#0333FF', '#FF0703', '#0CFF03', '#FFC300', '#581845'];
 var closest_paths = [];
+var target_station_ids = [];
 
 const marker_type = {
     STATION: 'station',
@@ -97,12 +98,35 @@ function createControlDiv(id, title, text_id, text_inner_html){
     return ui;
 }
 
-function createSideBarList(k){
+function createSideBarList(){
+    var nodes = []; // station nodes for the closest paths
+
+    for (var i = 0; i < closest_paths.length; i++){
+        // split the link id to three parts, the station node in second order
+        nodes.push(parseInt(closest_paths[i].linkId.split("n")[1]));
+    }
+
+    nodes = [...new Set(nodes)];
+    console.log(nodes);
+
+    target_station_ids = []; // station ids
+
+    for (var i = 0; i < station_markers.length; i++){
+        for (var j = 0; j < nodes.length; j++){
+            if (station_markers[i].node === nodes[j]){
+                target_station_ids.push(i);
+                break;
+            }
+        }
+    }
+
+    console.log(target_station_ids);
+
     var group = document.createElement('div');
     group.setAttribute('class', 'list-group');
     group.setAttribute('id', 'side-bar-list');
 
-    for (var i = 0; i < k; i++){
+    for (var i = 0; i < target_station_ids.length; i++){
         var anchor = document.createElement('a');
         if (i === 0){
             anchor.setAttribute("class", "list-group-item list-group-item-action flex-column align-items-start active");
@@ -116,7 +140,7 @@ function createSideBarList(k){
 
         var h5 = document.createElement('h5');
         h5.setAttribute("class", "mb-1");
-        h5.innerText = station_markers[i].id;
+        h5.innerText = station_markers[target_station_ids[i]].id;
 
         var small = document.createElement('small');
 
@@ -125,10 +149,10 @@ function createSideBarList(k){
 
         var p = document.createElement('p');
         p.setAttribute("class","mb-1");
-        p.innerText = station_markers[i].address;
+        p.innerText = station_markers[target_station_ids[i]].address;
 
         var zipSmall = document.createElement('small');
-        zipSmall.innerText = station_markers[i].zip;
+        zipSmall.innerText = station_markers[target_station_ids[i]].zip;
 
         anchor.appendChild(div);
         anchor.appendChild(p);
@@ -215,7 +239,7 @@ function initMap() {
 
         var accident_coords = {lat: accident.lat(), lng: accident.lng()};
         // Show k-nearest stations on the map, hidden the others.
-        setMapOnNearest(map, 4, accident_coords, station_markers);
+        // setMapOnNearest(map, 4, accident_coords, station_markers);
 
         map.setCenter({lat: accident.lat(), lng: accident.lng()});
         map.setZoom(accidentZoom);
@@ -272,10 +296,10 @@ function initMap() {
 
         // Show these closest path
         $('#side-bar-list').remove();
-        var groupList = createSideBarList(closest_paths.length);
+        var groupList = createSideBarList();
         $('#closeNav').after(groupList);
         $("#sidebar").css({"display": "block", "width": "350px"});
-        google.maps.event.trigger(station_markers[0], 'click');
+        google.maps.event.trigger(station_markers[target_station_ids[0]], 'click');
 
         // Draw polyline path
         drawPath(0, map);
@@ -332,7 +356,8 @@ function addMarker(location, properties){
         animation: google.maps.Animation.DROP,
         id: properties.ID,
         address: properties.Address,
-        zip: properties.ZipCode
+        zip: properties.ZipCode,
+        node: properties.ClosestNode
       });
 
     station_markers.push(marker);
@@ -386,33 +411,33 @@ function addMarkerClickListener(marker, type){
     });
 }
 
-// Sets the map on nearest station markers
-// Approach One: Number - based
-/**
- * 
- * @param {*} map Google map object
- * @param {*} k the number of stations shown
- * @param {*} coords accident spot coordinate
- */
-function setMapOnNearest(map, k, coords, markers){
-    clearMarkers(markers);
+// // Sets the map on nearest station markers
+// // Approach One: Number - based
+// /**
+//  * 
+//  * @param {*} map Google map object
+//  * @param {*} k the number of stations shown
+//  * @param {*} coords accident spot coordinate
+//  */
+// function setMapOnNearest(map, k, coords, markers){
+//     clearMarkers(markers);
 
-    markers.sort(function(a,b){
-        a_lat_distance = a.position.lat() - coords.lat;
-        a_lng_distance = a.position.lng() - coords.lng;
-        a_l2_distance = Math.sqrt(a_lat_distance * a_lat_distance + a_lng_distance * a_lng_distance);
+//     markers.sort(function(a,b){
+//         a_lat_distance = a.position.lat() - coords.lat;
+//         a_lng_distance = a.position.lng() - coords.lng;
+//         a_l2_distance = Math.sqrt(a_lat_distance * a_lat_distance + a_lng_distance * a_lng_distance);
 
-        b_lat_distance = b.position.lat() - coords.lat;
-        b_lng_distance = b.position.lng() - coords.lng;
-        b_l2_distance = Math.sqrt(b_lat_distance * b_lat_distance + b_lng_distance * b_lng_distance);
+//         b_lat_distance = b.position.lat() - coords.lat;
+//         b_lng_distance = b.position.lng() - coords.lng;
+//         b_l2_distance = Math.sqrt(b_lat_distance * b_lat_distance + b_lng_distance * b_lng_distance);
 
-        return a_l2_distance - b_l2_distance
-    });
+//         return a_l2_distance - b_l2_distance
+//     });
 
-    for (var i = 0; i < k; i++){
-        markers[i].setMap(map);
-    }
-}
+//     for (var i = 0; i < k; i++){
+//         markers[i].setMap(map);
+//     }
+// }
 
 // Sort the whole node list by the distance between the accident spot and each node
 /**
@@ -440,6 +465,7 @@ function getNearestSegment(segments){
     return segments[0];
 }
 
+// Get the paths containing the nearest segment
 function getClosestPaths(){
     closest_paths = [];
 
@@ -448,6 +474,7 @@ function getClosestPaths(){
     });
 
     for (var i = 0; i < paths_potential.length; i++){
+        // check if the path contains the nearest segment
         if (paths_potential[i].distance !== paths_potential[0].distance){
             break;
         }
