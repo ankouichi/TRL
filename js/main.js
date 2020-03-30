@@ -14,12 +14,12 @@ $(document).on('click', '.list-group-item', function() {
     $(".list-group-item").removeClass("active");
     $(this).addClass("active");
 
+    deleteMarkers(polylines);
+
     var index = $(this).index();
     // trigger the click event on station marker of this index
-    google.maps.event.trigger(station_markers[target_station_ids[index]], 'click');
-
-    // sort the nodes by distance with the accident spot
-    //sortNodesByDistance({lat: accident_marker.position.lat(), lng: accident_marker.position.lng()});
+    google.maps.event.trigger(station_markers[target_path_collection[index].station], 'click');
+    drawPath(index, 0, map);
 });
 
 var map;
@@ -37,9 +37,8 @@ var radius = 1610 // 5633 meters = 3.5 miles, 4828 meters = 3 miles, 3219 meters
 var paths;
 var paths_potential = [];
 var polylines = [];
-var colors = ['#0333FF', '#FF0703', '#0CFF03', '#FFC300', '#581845'];
 var closest_paths = [];
-var target_station_ids = [];
+var target_path_collection = [];
 
 const marker_type = {
     STATION: 'station',
@@ -100,33 +99,46 @@ function createControlDiv(id, title, text_id, text_inner_html){
 
 function createSideBarList(){
     var nodes = []; // station nodes for the closest paths
+    target_path_collection = [];
 
     for (var i = 0; i < closest_paths.length; i++){
         // split the link id to three parts, the station node in second order
-        nodes.push(parseInt(closest_paths[i].linkId.split("n")[1]));
+        var from = parseInt(closest_paths[i].linkId.split("n")[1]);
+        closest_paths[i].from = from;
+        nodes.push(from);
     }
 
-    nodes = [...new Set(nodes)];
-    console.log(nodes);
+    nodes = [...new Set(nodes)]; // remove duplicates
 
-    target_station_ids = []; // station ids
 
-    for (var i = 0; i < station_markers.length; i++){
-        for (var j = 0; j < nodes.length; j++){
-            if (station_markers[i].node === nodes[j]){
-                target_station_ids.push(i);
+    for (var i = 0; i < nodes.length; i++){
+        for (var j = 0; j < station_markers.length; j++){
+            if (station_markers[j].node === nodes[i]){
+
+                target_path_collection.push({
+                    node: nodes[i],
+                    station: j,
+                    paths: []
+                });
+
                 break;
             }
         }
     }
 
-    console.log(target_station_ids);
+    for (var i = 0; i < target_path_collection.length; i++){
+        for (var j = 0; j < closest_paths.length; j++){
+            if (closest_paths[j].from === target_path_collection[i].node){
+                target_path_collection[i].paths.push(closest_paths[j]);
+            }
+        }
+    }
 
     var group = document.createElement('div');
     group.setAttribute('class', 'list-group');
     group.setAttribute('id', 'side-bar-list');
 
-    for (var i = 0; i < target_station_ids.length; i++){
+    for (var i = 0; i < target_path_collection.length; i++){
         var anchor = document.createElement('a');
         if (i === 0){
             anchor.setAttribute("class", "list-group-item list-group-item-action flex-column align-items-start active");
@@ -140,19 +152,21 @@ function createSideBarList(){
 
         var h5 = document.createElement('h5');
         h5.setAttribute("class", "mb-1");
-        h5.innerText = station_markers[target_station_ids[i]].id;
+        h5.innerText = station_markers[target_path_collection[i].station].id;
 
         var small = document.createElement('small');
+
+        small.innerText = 'Routes: ' + target_path_collection[i].paths.length;
 
         div.appendChild(h5);
         div.append(small);
 
         var p = document.createElement('p');
         p.setAttribute("class","mb-1");
-        p.innerText = station_markers[target_station_ids[i]].address;
+        p.innerText = station_markers[target_path_collection[i].station].address;
 
         var zipSmall = document.createElement('small');
-        zipSmall.innerText = station_markers[target_station_ids[i]].zip;
+        zipSmall.innerText = station_markers[target_path_collection[i].station].zip;
 
         anchor.appendChild(div);
         anchor.appendChild(p);
@@ -299,14 +313,20 @@ function initMap() {
         var groupList = createSideBarList();
         $('#closeNav').after(groupList);
         $("#sidebar").css({"display": "block", "width": "350px"});
-        google.maps.event.trigger(station_markers[target_station_ids[0]], 'click');
+        google.maps.event.trigger(station_markers[target_path_collection[0].station], 'click');
 
         // Draw polyline path
-        drawPath(0, map);
+        drawPath(0, 0, map);
     });
 }
 
-function drawPath(path_idx,map){
+/**
+ * Draw polyline route on the map
+ * @param {*} col_idx collection index
+ * @param {*} route_idx route index
+ * @param {*} map map
+ */
+function drawPath(col_idx, route_idx, map){
     // var node_marker = new google.maps.Marker({
     //     position: nodes_inside[closest_paths[i].number],
     //     icon:'./img/add_location_2x.png',
@@ -315,9 +335,11 @@ function drawPath(path_idx,map){
 
     // node_markers.push(node_marker);
 
-    var points = closest_paths[path_idx].points;
-    var upIdx = points.indexOf(closest_paths[path_idx].up);
-    var downIdx = points.indexOf(closest_paths[path_idx].down);
+    var route = target_path_collection[col_idx].paths[route_idx]
+
+    var points = route.points;
+    var upIdx = points.indexOf(route.up);
+    var downIdx = points.indexOf(route.down);
     var correct_path = points.slice(0,downIdx + 1);
 
     var targetPath = new google.maps.Polyline({
@@ -332,13 +354,13 @@ function drawPath(path_idx,map){
     polylines.push(targetPath);
 
     var seg_up_marker = new google.maps.Marker({
-        position: closest_paths[path_idx].up,
+        position: route.up,
         icon:'./img/mediate-location.png',
         map: map
     })
 
     var seg_down_marker = new google.maps.Marker({
-        position: closest_paths[path_idx].down,
+        position: route.down,
         icon:'./img/mediate-location.png',
         map: map
     })
