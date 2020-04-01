@@ -63,9 +63,9 @@ function CenterControl(controlDiv, map) {
     'goCenterText','Center Map');
     controlDiv.appendChild(goCenterUI);
 
-    var showAllUI = createControlDiv('showAllUI', 'Click to show the locations of all fire stations',
-    'showAllText','Show All Stations');
-    controlDiv.appendChild(showAllUI);
+    // var showAllUI = createControlDiv('showAllUI', 'Click to show the locations of all fire stations',
+    // 'showAllText','Show All Stations');
+    // controlDiv.appendChild(showAllUI);
 
     // Setup the click event listeners: simply set the map to Chicago.
     goCenterUI.addEventListener('click', function() {
@@ -76,9 +76,9 @@ function CenterControl(controlDiv, map) {
 
     // Set up the click event listener for 'Show All':
     // Show all hidden fire stations on the map.
-    showAllUI.addEventListener('click', function() {
-        setMapOnAll(map, station_markers);
-    });
+    // showAllUI.addEventListener('click', function() {
+    //     setMapOnAll(map, station_markers);
+    // });
 }
 
   // create Control Div with interior text and click function
@@ -168,11 +168,27 @@ function createSideBarList(){
         var zipSmall = document.createElement('small');
         zipSmall.innerText = station_markers[target_path_collection[i].station].zip;
 
+        // path list added 3/31/2020
+        var ul = document.createElement('ul');
+        ul.setAttribute("class", "list-group");
+
+        for (var j = 0; j < target_path_collection[i].paths.length; j++){
+            // var span = document.createElement('span');
+            // span.setAttribute("class", "badge badge-primary badge-pill");
+            // span.innerText = 
+
+            var li = document.createElement('li');
+            li.setAttribute("class", "list-group-item d-flex justify-content-between align-items-center");
+            li.innerText = "Path ?";
+            ul.appendChild(li);
+        }
+
         anchor.appendChild(div);
         anchor.appendChild(p);
         anchor.appendChild(zipSmall);
 
         group.appendChild(anchor);
+        group.appendChild(ul);
     }
 
     return group;
@@ -342,12 +358,21 @@ function drawPath(col_idx, route_idx, map){
     var downIdx = points.indexOf(route.down);
     var correct_path = points.slice(0,downIdx + 1);
 
+    var lineSymbol = {
+        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
+    };
+
     var targetPath = new google.maps.Polyline({
         path: correct_path,
         geodesic: true,
         strokeColor: '#FF0000',
         strokeOpacity: 1.0,
-        strokeWeight: 2
+        strokeWeight: 2,
+        icons: [{
+            icon: lineSymbol,
+            offset: '0%',
+            repeat: '10%'
+        }]
     });
       
     targetPath.setMap(map);
