@@ -5,51 +5,142 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css">
+    <style>
+      .sidebar {
+        height: 100%;
+        width: 400px;
+      }
+
+      .dropdown-container {
+        display: block;
+        padding-left: 16px;
+      }
+
+      .dropdown-container ~ .dropdown-container {
+        display: none;
+      }
+
+      .list-group-item:first-child {
+        border-top-left-radius: 0px;
+        border-top-right-radius: 0px;
+      }
+
+      .list-group-item:last-child {
+        margin-bottom: 0;
+        border-bottom-right-radius: 0px;
+        border-bottom-left-radius: 0px;
+      }
+
+      .dropdown-item {
+      padding: 6px 8px 6px 16px;
+      text-decoration: none;
+      font-size: 20px;
+      color: #818181;
+      display: block;
+      border: none;
+      background: none;
+      width:100%;
+      text-align: left;
+      cursor: pointer;
+      outline: none;
+      }
+
+      .dropdown-item.active{
+        color: #0062cc;
+        text-decoration: none;
+        background-color: rgba(0, 0, 0, 0);
+        font-weight: bold;
+      }
+
+      .dropdown-item:focus, .dropdown-item:hover {
+        /* color: #16181b; */
+        /* text-decoration: none; */
+        background-color: rgba(0, 0, 0, 0);
+      }
+
+      .list-group-item.active {
+        z-index: 2;
+        color: #495057;
+        background-color: rgba(0,0,0,.075);
+        border-color: rgba(0,0,0,.075);
+      }
+
+      .badge {
+        font-size: 100%;
+      }
+    </style>
 </head>
 <body>
-    <div class="list-group">
-        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start ">
+    <div class="sidebar">
+      <div class="list-group">
+        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start dropdown-btn active">
           <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">List group item heading</h5>
-            <small>3 days ago</small>
+            <h5 class="mb-1">STA1</h5>
+            <!-- <small>3 days ago</small> -->
+            <span class="badge badge-primary badge-pill">3</span>
           </div>
-          <p class="mb-1">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit.</p>
-          <small>Donec id elit non mi porta.</small>
+          <p class="mb-1">5201 AMESBURY DR. 75206</p>
+          
+          <!-- <small>Donec id elit non mi porta.</small> -->
         </a>
-        <ul class="list-group">
-            <li class="list-group-item d-flex justify-content-between align-items-center active">
-              Cras justo odio
-              <span class="badge badge-primary badge-pill">14</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              Dapibus ac facilisis in
-              <span class="badge badge-primary badge-pill">2</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              Morbi leo risus
-              <span class="badge badge-primary badge-pill">1</span>
-            </li>
-        </ul>
-        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-          <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">List group item heading</h5>
-            <small class="text-muted">3 days ago</small>
-          </div>
-          <p class="mb-1">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit.</p>
-          <small class="text-muted">Donec id elit non mi porta.</small>
-        </a>
-        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
-          <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">List group item heading</h5>
-            <small class="text-muted">3 days ago</small>
-          </div>
-          <p class="mb-1">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius blandit.</p>
-          <small class="text-muted">Donec id elit non mi porta.</small>
-        </a>
-      </div>
 
-      <script src="js/jquery/jquery.min.js"></script>
-      <script src="js/popper.min.js"></script>
-      <script src="js/bootstrap.min.js"></script>
+        <div class="dropdown-container list-group">
+          <a class="dropdown-item active" href="#">Link 1</a>
+          <a class="dropdown-item " href="#">Link 2</a>
+          <a class="dropdown-item" href="#">Link 3</a>
+        </div>
+
+        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start dropdown-btn">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">STA2</h5>
+            <!-- <small class="text-muted">3 days ago</small> -->
+          </div>
+          <p class="mb-1">5201 AMESBURY DR. 75206</p>
+        </a>
+        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start dropdown-btn">
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">STA3</h5>
+            <!-- <small class="text-muted">3 days ago</small> -->
+          </div>
+          <p class="mb-1">5201 AMESBURY DR. 75206</p>
+        </a>
+    </div>
+    </div>
+    <script src="js/jquery/jquery.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script>
+
+      $('.dropdown-btn').click(function(){
+        var display = $(this).next().css('display');
+        if (display == "block"){
+          $(this).next().css('display', 'none');
+        } else {
+          $(this).next().css('display', 'block');
+        }
+
+        $(this).next().addClass('active');
+        $(".dropdown-btn").removeClass("active");
+        $(this).addClass("active");
+      });
+
+      // $(document).on('click', '.dropdown-btn', function(){
+      //   var display = $(this).next().css('display');
+      //   if (display == "block"){
+      //     $(this).next().css('display', 'none');
+      //   } else {
+      //     $(this).next().css('display', 'block');
+      //   }
+
+      //   $(this).next().addClass('active');
+      //   $(".dropdown-btn").removeClass("active");
+      //   $(this).addClass("active");
+      // })
+
+      $(".dropdown-item").click(function(){
+        $(".dropdown-item").removeClass("active");
+        $(this).addClass("active");
+      });
+    </script>
 </body>
 </html>

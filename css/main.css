@@ -65,3 +65,61 @@ html, body {
   .truck {
     margin-top: 1px;
   }
+
+  .dropdown-container {
+    display: block;
+    padding-left: 16px;
+  }
+
+  .dropdown-container ~ .dropdown-container {
+    display: none;
+  }
+
+  .list-group-item:first-child {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+  }
+
+  .list-group-item:last-child {
+    margin-bottom: 0;
+    border-bottom-right-radius: 0px;
+    border-bottom-left-radius: 0px;
+  }
+
+  .dropdown-item {
+  padding: 6px 8px 6px 16px;
+  text-decoration: none;
+  font-size: 20px;
+  color: #818181;
+  display: block;
+  border: none;
+  background: none;
+  width:100%;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  }
+
+  .dropdown-item.active{
+    color: #0062cc;
+    text-decoration: none;
+    background-color: rgba(0, 0, 0, 0);
+    font-weight: bold;
+  }
+
+  .dropdown-item:focus, .dropdown-item:hover {
+    /* color: #16181b; */
+    /* text-decoration: none; */
+    background-color: rgba(0, 0, 0, 0);
+  }
+
+  .list-group-item.active {
+    z-index: 2;
+    color: #495057;
+    background-color: rgba(0,0,0,.075);
+    border-color: rgba(0,0,0,.075);
+  }
+
+  .badge {
+    font-size: 100%;
+  }

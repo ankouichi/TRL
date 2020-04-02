@@ -10,16 +10,31 @@ $(document).ready( function() {
     });
 });
 
-$(document).on('click', '.list-group-item', function() {
-    $(".list-group-item").removeClass("active");
+$(document).on('click', '.dropdown-btn', function(){
+    var display = $(this).next().css('display');
+    if (display == "block"){
+      $(this).next().css('display', 'none');
+    } else {
+      $(this).next().css('display', 'block');
+    }
+
+    $(this).next().addClass('active');
+    $(".dropdown-btn").removeClass("active");
+    $(this).addClass("active");
+});
+
+$(document).on('click', '.dropdown-item', function(){
+    $(".dropdown-item").removeClass("active");
     $(this).addClass("active");
 
     deleteMarkers(polylines);
 
+    var parent_index = $('.dropdown-btn').index($(this).parent().prev());
     var index = $(this).index();
+    
     // trigger the click event on station marker of this index
-    google.maps.event.trigger(station_markers[target_path_collection[index].station], 'click');
-    drawPath(index, 0, map);
+    google.maps.event.trigger(station_markers[target_path_collection[parent_index].station], 'click');
+    drawPath(parent_index, index, map);
 });
 
 var map;
@@ -140,10 +155,9 @@ function createSideBarList(){
 
     for (var i = 0; i < target_path_collection.length; i++){
         var anchor = document.createElement('a');
+        anchor.setAttribute("class", "list-group-item list-group-item-action flex-column align-items-start dropdown-btn");
         if (i === 0){
-            anchor.setAttribute("class", "list-group-item list-group-item-action flex-column align-items-start active");
-        } else{
-            anchor.setAttribute("class", "list-group-item list-group-item-action flex-column align-items-start");
+            anchor.classList.add("active");
         }
         anchor.setAttribute("href","#");
 
@@ -154,41 +168,43 @@ function createSideBarList(){
         h5.setAttribute("class", "mb-1");
         h5.innerText = station_markers[target_path_collection[i].station].id;
 
-        var small = document.createElement('small');
-
-        small.innerText = 'Routes: ' + target_path_collection[i].paths.length;
+        var span = document.createElement('span');
+        span.setAttribute("class", "badge badge-primary badge-pill");
+        span.innerText = target_path_collection[i].paths.length;
 
         div.appendChild(h5);
-        div.append(small);
+        div.append(span);
 
         var p = document.createElement('p');
         p.setAttribute("class","mb-1");
-        p.innerText = station_markers[target_path_collection[i].station].address;
-
-        var zipSmall = document.createElement('small');
-        zipSmall.innerText = station_markers[target_path_collection[i].station].zip;
+        p.innerText = station_markers[target_path_collection[i].station].address + ", " +
+         station_markers[target_path_collection[i].station].zip;
 
         // path list added 3/31/2020
-        var ul = document.createElement('ul');
-        ul.setAttribute("class", "list-group");
+        var dropdownDiv = document.createElement('div');
+        dropdownDiv.setAttribute("class", "dropdown-container list-group");
 
         for (var j = 0; j < target_path_collection[i].paths.length; j++){
             // var span = document.createElement('span');
             // span.setAttribute("class", "badge badge-primary badge-pill");
             // span.innerText = 
 
-            var li = document.createElement('li');
-            li.setAttribute("class", "list-group-item d-flex justify-content-between align-items-center");
-            li.innerText = "Path ?";
-            ul.appendChild(li);
+            var a = document.createElement('a');
+            a.setAttribute("href","#");
+            a.setAttribute("class", "dropdown-item");
+            if (i == 0 && j == 0){
+                a.classList.add("active");
+            }
+            a.innerText = "Path " + (j+1);
+            dropdownDiv.appendChild(a);
         }
 
         anchor.appendChild(div);
         anchor.appendChild(p);
-        anchor.appendChild(zipSmall);
+        // anchor.appendChild(zipSmall);
 
         group.appendChild(anchor);
-        group.appendChild(ul);
+        group.appendChild(dropdownDiv);
     }
 
     return group;
