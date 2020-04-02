@@ -21,11 +21,18 @@ $(document).on('click', '.dropdown-btn', function(){
     $(this).next().addClass('active');
     $(".dropdown-btn").removeClass("active");
     $(this).addClass("active");
+
+    var index = $('.dropdown-btn').index($(this));
+    google.maps.event.trigger(station_markers[target_path_collection[index].station], 'click');
 });
 
 $(document).on('click', '.dropdown-item', function(){
+    // change highlighted path
     $(".dropdown-item").removeClass("active");
     $(this).addClass("active");
+    // change highlighted station
+    $(".dropdown-btn").removeClass("active");
+    $(this).parent().prev().addClass("active");
 
     deleteMarkers(polylines);
 
@@ -185,23 +192,23 @@ function createSideBarList(){
         dropdownDiv.setAttribute("class", "dropdown-container list-group");
 
         for (var j = 0; j < target_path_collection[i].paths.length; j++){
-            // var span = document.createElement('span');
-            // span.setAttribute("class", "badge badge-primary badge-pill");
-            // span.innerText = 
-
             var a = document.createElement('a');
-            a.setAttribute("href","#");
-            a.setAttribute("class", "dropdown-item");
             if (i == 0 && j == 0){
                 a.classList.add("active");
             }
-            a.innerText = "Path " + (j+1);
+
+            a.setAttribute("href","#");
+            a.setAttribute("class", "dropdown-item");
+
+            // problem: the travel time is for the whole path not for the splitted.
+            a.innerText = "Travel Time: " + target_path_collection[i].paths[j].travelTime.toFixed(2) + 
+                ", Travel Risk: " + target_path_collection[i].paths[j].travelRisk.toFixed(2);
+
             dropdownDiv.appendChild(a);
         }
 
         anchor.appendChild(div);
         anchor.appendChild(p);
-        // anchor.appendChild(zipSmall);
 
         group.appendChild(anchor);
         group.appendChild(dropdownDiv);
@@ -284,8 +291,6 @@ function initMap() {
         addMarkerClickListener(accident_marker, marker_type.ACCIDENT);
 
         var accident_coords = {lat: accident.lat(), lng: accident.lng()};
-        // Show k-nearest stations on the map, hidden the others.
-        // setMapOnNearest(map, 4, accident_coords, station_markers);
 
         map.setCenter({lat: accident.lat(), lng: accident.lng()});
         map.setZoom(accidentZoom);
@@ -331,8 +336,15 @@ function initMap() {
                     }
 
                     var nearestSeg = getNearestSegment(temp_distances);
-                    paths_potential.push({linkId: paths[j].LinkID, distance: nearestSeg.distance, number: i,
-                         points: paths[j].points, up: nearestSeg.up, down: nearestSeg.down});
+                    paths_potential.push({
+                        linkId: paths[j].LinkID, 
+                        distance: nearestSeg.distance,
+                        number: i,
+                        travelTime: paths[j].TravelTime,
+                        travelRisk: paths[j].TravelRisk, 
+                        points: paths[j].points, 
+                        up: nearestSeg.up, 
+                        down: nearestSeg.down});
                 }
             }
         }
@@ -359,16 +371,7 @@ function initMap() {
  * @param {*} map map
  */
 function drawPath(col_idx, route_idx, map){
-    // var node_marker = new google.maps.Marker({
-    //     position: nodes_inside[closest_paths[i].number],
-    //     icon:'./img/add_location_2x.png',
-    //     map: map
-    // })
-
-    // node_markers.push(node_marker);
-
     var route = target_path_collection[col_idx].paths[route_idx]
-
     var points = route.points;
     var upIdx = points.indexOf(route.up);
     var downIdx = points.indexOf(route.down);
