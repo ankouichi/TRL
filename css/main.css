@@ -123,3 +123,9 @@ html, body {
   .badge {
     font-size: 100%;
   }
+
+  .notice {
+    position: absolute;
+    right: 10px;
+    background-color: #28a745;
+  }

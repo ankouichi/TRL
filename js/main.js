@@ -131,8 +131,6 @@ function createSideBarList(){
     }
 
     nodes = [...new Set(nodes)]; // remove duplicates
-
-
     for (var i = 0; i < nodes.length; i++){
         for (var j = 0; j < station_markers.length; j++){
             if (station_markers[j].node === nodes[i]){
@@ -200,9 +198,26 @@ function createSideBarList(){
             a.setAttribute("href","#");
             a.setAttribute("class", "dropdown-item");
 
+            var minutes = Math.ceil(target_path_collection[i].paths[j].travelTime / 60);
+            var riskNum = target_path_collection[i].paths[j].travelRisk;
+            var risk;
+            if (riskNum > 0.05) {
+                risk = 'High';
+            } else if (riskNum > 0.01) {
+                risk = 'Medium';
+            } else {
+                risk = 'Low';
+            }
+
             // problem: the travel time is for the whole path not for the splitted.
-            a.innerText = "Travel Time: " + target_path_collection[i].paths[j].travelTime.toFixed(2) + 
-                ", Travel Risk: " + target_path_collection[i].paths[j].travelRisk.toFixed(2);
+            a.innerText = "Travel Time: " + minutes + " mins, Travel Risk: " + risk;
+
+            if (j == 0 && i == 0){
+                var noticeSpan = document.createElement('span');
+                noticeSpan.setAttribute("class", "badge badge-primary badge-pill notice");
+                noticeSpan.innerText = "fastest";
+                a.appendChild(noticeSpan);
+            }
 
             dropdownDiv.appendChild(a);
         }
@@ -384,13 +399,13 @@ function drawPath(col_idx, route_idx, map){
     var targetPath = new google.maps.Polyline({
         path: correct_path,
         geodesic: true,
-        strokeColor: '#FF0000',
+        strokeColor: '#1E90FF',
         strokeOpacity: 1.0,
         strokeWeight: 2,
         icons: [{
             icon: lineSymbol,
             offset: '0%',
-            repeat: '10%'
+            repeat: '20%'
         }]
     });
       
@@ -547,6 +562,10 @@ function getClosestPaths(){
 
         closest_paths.push(paths_potential[i])
     }
+
+    closest_paths.sort(function(a,b){
+        return a.travelTime - b.travelTime;
+    });
 }
 
 // Sets the map on all markers in the array.
