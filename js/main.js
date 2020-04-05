@@ -191,12 +191,12 @@ function createSideBarList(){
 
         for (var j = 0; j < target_path_collection[i].paths.length; j++){
             var a = document.createElement('a');
+            a.setAttribute("href","#");
+            a.setAttribute("class", "dropdown-item");
+            
             if (i == 0 && j == 0){
                 a.classList.add("active");
             }
-
-            a.setAttribute("href","#");
-            a.setAttribute("class", "dropdown-item");
 
             var minutes = Math.ceil(target_path_collection[i].paths[j].travelTime / 60);
             var riskNum = target_path_collection[i].paths[j].travelRisk;
@@ -563,9 +563,57 @@ function getClosestPaths(){
         closest_paths.push(paths_potential[i])
     }
 
-    closest_paths.sort(function(a,b){
-        return a.travelTime - b.travelTime;
-    });
+    if (closest_paths.length > 1) {
+        closest_paths.sort(function(a,b){
+            return a.travelTime - b.travelTime;
+        });
+        
+        // var indexOfDown = closest_paths[0].points.indexOf(closest_paths[0].down);
+        // var intermediates = closest_paths[0].points.slice(0, indexOfDown + 1);
+        var distincts = [];
+        distincts.push(closest_paths[0]);
+
+        for (var i = 1; i < closest_paths.length; i++){
+            var idx = closest_paths[i].points.indexOf(closest_paths[i].down);
+            var imds = closest_paths[i].points.slice(0, idx + 1);
+            var matched = 1; // match flag
+
+            for (var j = 0; j < distincts.length; j++){
+                var tempIdx = distincts[j].points.indexOf(distincts[j].down);
+                var tempImds = distincts[j].points.slice(0, tempIdx + 1);
+
+                if (imds.length === tempImds.length){
+                    var equal = 1;
+                    // when the number of points are at the same
+                    // match values of random index for 5 times
+                    for (var k = 0; k < 10; k++) {
+                        var id = getRandomInt(imds.length);
+                        if (tempImds[id].lat !== imds[id].lat || tempImds[id].lng !== imds[id].lng){
+                            equal = 0;
+                            matched = 0;
+                            break;
+                        }
+                    }
+
+                    if (equal === 1) {
+                        matched = 1;
+                    }
+                } else {
+                    matched = 0;
+                }
+
+                if (matched === 1){
+                    break;
+                }
+            }
+
+            if (matched === 0){
+                distincts.push(closest_paths[i]);
+            }
+        }
+    
+        closest_paths = distincts;
+    }   
 }
 
 // Sets the map on all markers in the array.
