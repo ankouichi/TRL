@@ -35,6 +35,7 @@ public class XmlUtil {
                 link.setUpStream(Integer.parseInt(element.getAttribute("UpStream")));
                 link.setDownStream(Integer.parseInt(element.getAttribute("DownStream")));
                 link.setDirectionId(Integer.parseInt(element.getAttribute("Direction").split("_")[0]));
+                link.setDirection(  Integer.parseInt(element.getAttribute("Direction").split(" ")[1]));
 
                 links.add(link);
             }

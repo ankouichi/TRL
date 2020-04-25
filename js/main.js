@@ -282,7 +282,7 @@ function initMap() {
     });
 
     // Obtain paths info
-    $.getJSON("./js/paths.json", function (data){
+    $.getJSON("./js/paths-new.json", function (data){
         paths = data;
     });
 
@@ -405,27 +405,37 @@ function drawPath(col_idx, route_idx, map){
         icons: [{
             icon: lineSymbol,
             offset: '0%',
-            repeat: '20%'
+            repeat: '10%'
         }]
     });
       
     targetPath.setMap(map);
     polylines.push(targetPath);
 
-    var seg_up_marker = new google.maps.Marker({
-        position: route.up,
-        icon:'./img/mediate-location.png',
-        map: map
-    })
+    // for (var i = 1; i < correct_path.length - 1; i++){
+    //     var marker = new google.maps.Marker({
+    //         position: correct_path[i],
+    //         label: i + "",
+    //         map: map
+    //       });
 
-    var seg_down_marker = new google.maps.Marker({
-        position: route.down,
-        icon:'./img/mediate-location.png',
-        map: map
-    })
+    //     node_markers.push(marker);
+    // }
 
-    node_markers.push(seg_up_marker);
-    node_markers.push(seg_down_marker);
+    // var seg_up_marker = new google.maps.Marker({
+    //     position: route.up,
+    //     icon:'./img/mediate-location.png',
+    //     map: map
+    // })
+
+    // var seg_down_marker = new google.maps.Marker({
+    //     position: route.down,
+    //     icon:'./img/mediate-location.png',
+    //     map: map
+    // })
+
+    // node_markers.push(seg_up_marker);
+    // node_markers.push(seg_down_marker);
 }
 
 // Adds a marker to the map and push to the array.

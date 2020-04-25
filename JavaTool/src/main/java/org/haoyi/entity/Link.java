@@ -9,6 +9,9 @@ public class Link {
     private Integer directionId;
     private List<Point> points;
 
+    // April 24th added field: 1-forward 2-reverse
+    private Integer direction;
+
     public Integer getUpStream() {
         return upStream;
     }
@@ -47,5 +50,13 @@ public class Link {
 
     public Integer getDirectionId(){
         return directionId;
+    }
+
+    public Integer getDirection() {
+        return direction;
+    }
+
+    public void setDirection(Integer direction) {
+        this.direction = direction;
     }
 }
