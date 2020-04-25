@@ -15,6 +15,11 @@ public class JsonUtil {
         return Arrays.asList(mapper.readValue(new File(file), OdPair[].class));
     }
 
+    public static List<Route> readRouteJsonFile(String file) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        return Arrays.asList(mapper.readValue(new File(file), Route[].class));
+    }
+
     public static List<Node> readNodeJsonFile(String file) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         return Arrays.asList(mapper.readValue(new File(file), Node[].class));
@@ -35,8 +40,14 @@ public class JsonUtil {
         return Arrays.asList(mapper.readValue(new File(file), Link[].class));
     }
 
+    public static void writeLinkJsonFile(String file, List<Link> links) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(new File(file), links);
+    }
+
     public static void writeRouteJsonFile(String file, List<Route> routes) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(new File(file), routes);
     }
+
 }
