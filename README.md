@@ -1,14 +1,14 @@
 # Google Maps-based road rescue system
 
-<p align="center">
- <img src="./img/Screenshot_routing.PNG" alt="routing" width="350"/>
-</p>
-
 This is a Google Maps-based website designed to provide road rescue service in DFW area.
 When a traffic accident happens or someone's car breaks down somewhere in the DFW area, the driver may click on the position where the accident occurs to find out if there are fire stations (represented by ![station icon](https://raw.githubusercontent.com/ankouichi/TRL/master/img/station.png)) nearby to call for help. In addition, if there are multiple stations or routes available, show all the options on the left panel, including:
 
 - **fire station info** : *name*, *address*, *number of routes* , *number of remaining trucks*
 - **route info** : *estimated time* , *risk factor*
+
+<p align="center">
+ <img src="./img/Screenshot_routing.PNG" alt="routing" width="350"/>
+</p>
 
 ### Concepts
 * Point - Any position on the map is a point, it can be marked as a coordinate which contains two properties: longitude and latitude.
