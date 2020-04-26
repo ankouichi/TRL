@@ -29,12 +29,12 @@ When a traffic accident happens or someone's car breaks down somewhere in the DF
     Whenever click on the map, capture the coordinate of the point and show the specific icon ![accident](https://raw.githubusercontent.com/ankouichi/TRL/master/img/jiaotongshigu.png) to indicate this is the accident position **A**.
  2. Locate nearby nodes
     1) Draw a circle centered with **A** and radius of 1 mile.
-    2) Then iterate the node list to find out all the nodes within the circle. In order to do this, I use **Haversine Formula** to calculate the spherical distance between two points based on their coordinates.
-
-     > a = sin²(Δφ/2) + cos φ1 ⋅ cos φ2 ⋅ sin²(Δλ/2)  
-     > c = 2 ⋅ atan2( √a, √(1−a) )  
-     > d = R ⋅ c  
-     > φ is latitude, λ is longitude, R is earth’s radius (mean radius = 6,371km); All the latitude and longitude need to be in radians to pass to above functions.
+    2) Then iterate the node list to find out all the nodes within the circle. In order to do this, I use **Haversine Formula** to calculate the spherical distance between two points based on their coordinates.  
+    
+       a = sin²(Δφ/2) + cos φ1 ⋅ cos φ2 ⋅ sin²(Δλ/2)  
+     c = 2 ⋅ atan2( √a, √(1−a) )  
+     d = R ⋅ c  
+     φ is latitude, λ is longitude, R is earth’s radius (mean radius = 6,371km); All the latitude and longitude need to be in radians to pass to above functions.
 
 
  3. **Find out routes containing closest segment**
@@ -60,7 +60,7 @@ When a traffic accident happens or someone's car breaks down somewhere in the DF
         
       * Point is on the left side of the segment
       * Point is on the right side of the segment  
-
+      
     4) Sort these distances in ascending order, then the first or first few ( since there may be multiple segments have the same distance to **A** ) segments are wanted.
 
     As long as I get the segment(s), I can trace back which routes contain it(them).
