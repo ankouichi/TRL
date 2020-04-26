@@ -1,5 +1,10 @@
 # Google Maps-based road rescue system
 
+<div style="text-align:center">
+<img src="./img/Screenshot_routing.PNG" alt="routing" width="350"/>
+</div>
+<br/>
+
 This is a Google Maps-based website designed to provide road rescue service in DFW area.
 When a traffic accident happens or someone's car breaks down somewhere in the DFW area, the driver may click on the position where the accident occurs to find out if there are fire stations (represented by ![station icon](https://raw.githubusercontent.com/ankouichi/TRL/master/img/station.png)) nearby to call for help. In addition, if there are multiple stations or routes available, show all the options on the left panel, including:
 
@@ -25,16 +30,36 @@ When a traffic accident happens or someone's car breaks down somewhere in the DF
     Whenever click on the map, capture the coordinate of the point and show the specific icon ![accident](https://raw.githubusercontent.com/ankouichi/TRL/master/img/jiaotongshigu.png) to indicate this is the accident position **A**.
  2. Locate nearby nodes
     1) Draw a circle centered with **A** and radius of 1 mile.
-    2) Then iterate the node list to find out all the nodes within the circle. In order to do this, I use Haversine Formula to calculate the spherical distance between two points based on their coordinates.
+    2) Then iterate the node list to find out all the nodes within the circle. In order to do this, I use **Haversine Formula** to calculate the spherical distance between two points based on their coordinates.
+
+    > a = sin²(Δφ/2) + cos φ1 ⋅ cos φ2 ⋅ sin²(Δλ/2)  
+    > c = 2 ⋅ atan2( √a, √(1−a) )  
+    > d = R ⋅ c  
+    > φ is latitude, λ is longitude, R is earth’s radius (mean radius = 6,371km); All the latitude and longitude need to be in radians to pass to above functions.
+
+
  3. **Find out routes containing closest segment**
     This is the crucial step. As far as I know, a route consists of several links and a link consists of several segments. In order to find out the target route, it is necessary to find the closest segment first which can be achieved by the following way.
 
     1) Split all routes obtained in Step 2 into links  
     2) Split these links into segments  
     3) Calculate the distance between **A** and each segment : It is a little tricky here since we need to consider different spatial layout of point and segment.  
-    * Point is directly above the segment, the distance will be the **perpendicular** distance. Use *Heron's Formula* to do the calculation.
-    * Point is on the left side of the segment
-    * Point is on the right side of the segment  
+
+    <div style="text-align:center">
+    <img src="./img/positions.jpg" alt="routing" width="400"/>
+    </div>
+    <br/>
+
+      * Point is directly above the segment, the distance will be the **perpendicular** distance. Use **Heron's Formula** to do the calculation:  
+      <div style="text-align:center">
+      <img src="./img/heron1.png" alt="routing" width="100"/>
+      ,&nbsp;&nbsp;
+      <img src="./img/heron2.png" alt="routing" width="50"/>
+      </div>
+
+      Then, distance d = 2 * S / p1p2.
+      * Point is on the left side of the segment
+      * Point is on the right side of the segment  
 
     4) Sort these distances in ascending order, then the first or first few ( since there may be multiple segments have the same distance to **A** ) segments are wanted.
 
