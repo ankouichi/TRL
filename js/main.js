@@ -38,6 +38,8 @@ $(document).on('click', '.dropdown-item', function(){
 
     var parent_index = $('.dropdown-btn').index($(this).parent().prev());
     var index = $(this).index();
+
+    centerMapOnRouteIntermediate(parent_index);
     
     // trigger the click event on station marker of this index
     //google.maps.event.trigger(station_markers[target_path_collection[parent_index].station], 'click');
@@ -374,6 +376,8 @@ function initMap() {
         $("#sidebar").css({"display": "block", "width": "350px"});
         //google.maps.event.trigger(station_markers[target_path_collection[0].station], 'click');
 
+        centerMapOnRouteIntermediate(0);
+
         // Draw polyline path
         drawPath(0, 0, map);
     });
@@ -404,13 +408,28 @@ function drawPath(col_idx, route_idx, map){
         strokeWeight: 2,
         icons: [{
             icon: lineSymbol,
-            offset: '0%',
+            offset: '100%',
             repeat: '10%'
         }]
     });
       
     targetPath.setMap(map);
     polylines.push(targetPath);
+}
+
+/**
+ * Set map center on the intermediate point of the station and accident position
+ * @param {*} parent_index Left dropdown button index
+ */
+function centerMapOnRouteIntermediate(parent_index){
+    var station_idx = target_path_collection[parent_index].station;
+    var sta_lat = station_markers[station_idx].position.lat();
+    var sta_lng = station_markers[station_idx].position.lng();
+
+    var acc_lat = accident_marker.position.lat();
+    var acc_lng = accident_marker.position.lng();
+
+    map.setCenter({lat: (sta_lat + acc_lat)/ 2, lng: (sta_lng + acc_lng)/ 2});
 }
 
 // Adds a marker to the map and push to the array.
