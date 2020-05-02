@@ -23,7 +23,7 @@ $(document).on('click', '.dropdown-btn', function(){
     $(this).addClass("active");
 
     var index = $('.dropdown-btn').index($(this));
-    google.maps.event.trigger(station_markers[target_path_collection[index].station], 'click');
+    //google.maps.event.trigger(station_markers[target_path_collection[index].station], 'click');
 });
 
 $(document).on('click', '.dropdown-item', function(){
@@ -40,7 +40,7 @@ $(document).on('click', '.dropdown-item', function(){
     var index = $(this).index();
     
     // trigger the click event on station marker of this index
-    google.maps.event.trigger(station_markers[target_path_collection[parent_index].station], 'click');
+    //google.maps.event.trigger(station_markers[target_path_collection[parent_index].station], 'click');
     drawPath(parent_index, index, map);
 });
 
@@ -372,7 +372,7 @@ function initMap() {
         var groupList = createSideBarList();
         $('#closeNav').after(groupList);
         $("#sidebar").css({"display": "block", "width": "350px"});
-        google.maps.event.trigger(station_markers[target_path_collection[0].station], 'click');
+        //google.maps.event.trigger(station_markers[target_path_collection[0].station], 'click');
 
         // Draw polyline path
         drawPath(0, 0, map);
@@ -411,31 +411,6 @@ function drawPath(col_idx, route_idx, map){
       
     targetPath.setMap(map);
     polylines.push(targetPath);
-
-    // for (var i = 1; i < correct_path.length - 1; i++){
-    //     var marker = new google.maps.Marker({
-    //         position: correct_path[i],
-    //         label: i + "",
-    //         map: map
-    //       });
-
-    //     node_markers.push(marker);
-    // }
-
-    // var seg_up_marker = new google.maps.Marker({
-    //     position: route.up,
-    //     icon:'./img/mediate-location.png',
-    //     map: map
-    // })
-
-    // var seg_down_marker = new google.maps.Marker({
-    //     position: route.down,
-    //     icon:'./img/mediate-location.png',
-    //     map: map
-    // })
-
-    // node_markers.push(seg_up_marker);
-    // node_markers.push(seg_down_marker);
 }
 
 // Adds a marker to the map and push to the array.
