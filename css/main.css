@@ -6,7 +6,7 @@ html, body {
   #map {
     height: 100%;
   }
-  #goCenterUI, #showAllUI, #testCaseUI {
+  #goCenterUI, #geoCodeUI, #addressUI {
     background-color: #fff;
     border: 2px solid #fff;
     border-radius: 3px;
@@ -16,7 +16,7 @@ html, body {
     margin-bottom: 22px;
     text-align: center;
   }
-  #goCenterText, #showAllText, #testCaseText {
+  #goCenterText, #geoCodeText {
     color: rgb(25,25,25);
     font-family: Roboto,Arial,sans-serif;
     font-size: 15px;
@@ -24,8 +24,18 @@ html, body {
     padding-left: 5px;
     padding-right: 5px;
   }
-  #showAllUI, #testCaseUI {
+
+  #geoCodeUI {
+    margin-left: 2px;
+  }
+
+  #goCenterUI {
     margin-left: 12px;
+  }
+
+  #addressInput{
+    height: 26px;
+    font-size: 15px;
   }
 
   .infowindow {

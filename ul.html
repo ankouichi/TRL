@@ -68,61 +68,53 @@
       .badge {
         font-size: 100%;
       }
+
+      #searchclear {
+        position: absolute;
+        right: 5px;
+        top: 0;
+        bottom: 0;
+        height: 14px;
+        margin: auto;
+        font-size: 14px;
+        cursor: pointer;
+        color: #ccc;
+      }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-      <div class="list-group">
-        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start dropdown-btn active">
-          <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">STA1</h5>
-            <!-- <small>3 days ago</small> -->
-            <span class="badge badge-primary badge-pill">3</span>
-          </div>
-          <p class="mb-1">5201 AMESBURY DR. 75206</p>
-          
-          <!-- <small>Donec id elit non mi porta.</small> -->
-        </a>
+    
+  <div class="input-group mb-3">
 
-        <div class="dropdown-container list-group">
-          <a class="dropdown-item active" href="#">Link 1</a>
-          <a class="dropdown-item " href="#">Link 2</a>
-          <a class="dropdown-item" href="#">Link 3</a>
-        </div>
+    <input type="text" class="form-control" placeholder="Recipient's username" aria-label="Recipient's username" aria-describedby="basic-addon2">
+    <span id="searchclear" class="glyphicon glyphicon-remove-circle"></span>
+    <div class="input-group-append">
+      <button class="btn btn-outline-secondary" type="button">Search</button>
+    </div>
+  </div>
 
-        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start dropdown-btn">
-          <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">STA2</h5>
-            <!-- <small class="text-muted">3 days ago</small> -->
-          </div>
-          <p class="mb-1">5201 AMESBURY DR. 75206</p>
-        </a>
-        <a href="#" class="list-group-item list-group-item-action flex-column align-items-start dropdown-btn">
-          <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">STA3</h5>
-            <!-- <small class="text-muted">3 days ago</small> -->
-          </div>
-          <p class="mb-1">5201 AMESBURY DR. 75206</p>
-        </a>
-    </div>
-    </div>
+
     <script src="js/jquery/jquery.min.js"></script>
     <script src="js/popper.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script>
 
-      $('.dropdown-btn').click(function(){
-        var display = $(this).next().css('display');
-        if (display == "block"){
-          $(this).next().css('display', 'none');
-        } else {
-          $(this).next().css('display', 'block');
-        }
-
-        $(this).next().addClass('active');
-        $(".dropdown-btn").removeClass("active");
-        $(this).addClass("active");
+      $("#searchclear").click(function(){
+          $("#searchinput").val('');
       });
+
+      // $('.dropdown-btn').click(function(){
+      //   var display = $(this).next().css('display');
+      //   if (display == "block"){
+      //     $(this).next().css('display', 'none');
+      //   } else {
+      //     $(this).next().css('display', 'block');
+      //   }
+
+      //   $(this).next().addClass('active');
+      //   $(".dropdown-btn").removeClass("active");
+      //   $(this).addClass("active");
+      // });
 
       // $(document).on('click', '.dropdown-btn', function(){
       //   var display = $(this).next().css('display');
@@ -137,10 +129,10 @@
       //   $(this).addClass("active");
       // })
 
-      $(".dropdown-item").click(function(){
-        $(".dropdown-item").removeClass("active");
-        $(this).addClass("active");
-      });
+      // $(".dropdown-item").click(function(){
+      //   $(".dropdown-item").removeClass("active");
+      //   $(this).addClass("active");
+      // });
     </script>
 </body>
 </html>

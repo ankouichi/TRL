@@ -54,15 +54,15 @@ var dallas = {lat: 32.80, lng: -96.80};
 var initialZoom = 11;
 var accidentZoom = 14;
 var nodes;
-var node_markers = [];
 var nodes_inside = [];
-var circle;
+// var circle;
 var radius = 1610 // 5633 meters = 3.5 miles, 4828 meters = 3 miles, 3219 meters = 2 miles, 1610 meters = 1 mile
 var paths;
 var paths_potential = [];
 var polylines = [];
 var closest_paths = [];
 var target_path_collection = [];
+var geocoder;
 
 const marker_type = {
     STATION: 'station',
@@ -83,26 +83,51 @@ function resizeWindow(){
  * @constructor
  */
 function CenterControl(controlDiv, map) {
+    // Address Input
+    var addressUI = document.createElement('div');
+    addressUI.id = "addressUI";
+    addressUI.title = "Please enter the detailed address";
+
+    // Set CSS for the control interior
+    var addressInput = document.createElement('INPUT');
+    addressInput.setAttribute("type", "text");
+    addressInput.setAttribute("size", "40");
+    // addressInput.setAttribute("placeholder", "Please enter full address");
+    addressInput.id = "addressInput";
+
+    addressUI.appendChild(addressInput);
+    controlDiv.appendChild(addressUI);
+
+    // GeoCode Search
+    var geoCodeUI = createControlDiv('geoCodeUI', 'Click to search for the location',
+    'geoCodeText','Search');
+    controlDiv.appendChild(geoCodeUI);
+
     var goCenterUI = createControlDiv('goCenterUI', 'Click to recenter the map',
     'goCenterText','Center Map');
     controlDiv.appendChild(goCenterUI);
-
-    // var showAllUI = createControlDiv('showAllUI', 'Click to show the locations of all fire stations',
-    // 'showAllText','Show All Stations');
-    // controlDiv.appendChild(showAllUI);
 
     // Setup the click event listeners: simply set the map to Chicago.
     goCenterUI.addEventListener('click', function() {
         map.setCenter(dallas);
         map.setZoom(initialZoom);
         setMapOnAll(map, station_markers);
-      });
+    });
 
-    // Set up the click event listener for 'Show All':
-    // Show all hidden fire stations on the map.
-    // showAllUI.addEventListener('click', function() {
-    //     setMapOnAll(map, station_markers);
-    // });
+    geoCodeUI.addEventListener('click', function() {
+        geocodeAddress(geocoder, map);
+    });
+}
+
+function geocodeAddress(geocoder, resultsMap) {
+    var address = document.getElementById('addressInput').value;
+    geocoder.geocode({'address': address}, function(results, status) {
+      if (status === 'OK') {
+        locAccPosAndRoutes(results[0].geometry.location);
+      } else {
+        alert('Can not find the location');
+      }
+    });
 }
 
   // create Control Div with interior text and click function
@@ -255,6 +280,8 @@ function initMap() {
             mapTypeId: 'roadmap' // roadmap,satellite,terrain,hybrid
     });
 
+    geocoder = new google.maps.Geocoder();
+
     // Create the DIV to hold the control and call the CenterControl()
     // constructor passing in this DIV.
     var centerControlDiv = document.createElement('div');
@@ -290,97 +317,89 @@ function initMap() {
 
     // place a marker on the map where the user clicks
     google.maps.event.addListener(map, 'click', function(event){
-        // Bug fix: remove accident marker if exists.
-        if (accident_marker){
-            accident_marker.setMap(null);
-            accident_marker = null;
-        }
-
-        if (info_window){
-            info_window.close();
-        }
-
-        accident = event.latLng;
-        accident_marker = new google.maps.Marker({
-            position: accident,
-            icon:'./img/jiaotongshigu.png',
-            map: map});
-        addMarkerClickListener(accident_marker, marker_type.ACCIDENT);
-
-        var accident_coords = {lat: accident.lat(), lng: accident.lng()};
-
-        map.setCenter({lat: accident.lat(), lng: accident.lng()});
-        map.setZoom(accidentZoom);
-
-        if (circle){
-            circle.setMap(null);
-        }
-
-        deleteMarkers(node_markers);
-        deleteMarkers(polylines);
-        paths_potential = [];
-        nodes_inside = [];
-
-        // Add a circle centered on the clicked point
-        // circle = new google.maps.Circle({
-        //     strokeColor: '#FF0000',
-        //     strokeOpacity: 0.8,
-        //     strokeWeight: 2,
-        //     fillColor: '#FF0000',
-        //     fillOpacity: 0.35,
-        //     map: map,
-        //     center: accident,
-        //     radius: radius
-        // });
-
-        // check which nodes are inside the circle
-        for (var i = 0; i < nodes.length; i++){
-            if (haversine_distance(accident_coords, nodes[i]) * 1000 <= radius) {
-                nodes_inside.push(nodes[i]);
-            }
-        }
-
-        // obtain paths to every node within the circle
-        for (var i = 0; i < nodes_inside.length; i++){
-            var downStream = nodes_inside[i];   // node destination
-            for (var j = 0; j < paths.length; j++){
-                if (paths[j].downStream === downStream.id){
-                    var points = paths[j].points;
-                    var temp_distances = [];
-                    for (var k = 0; k < points.length - 1; k++){
-                        var temp_distance = get_distance(accident_coords, points[k], points[k + 1]);
-                        temp_distances.push({distance: temp_distance, up: points[k], down: points[k + 1]});
-                    }
-
-                    var nearestSeg = getNearestSegment(temp_distances);
-                    paths_potential.push({
-                        linkId: paths[j].LinkID, 
-                        distance: nearestSeg.distance,
-                        number: i,
-                        travelTime: paths[j].TravelTime,
-                        travelRisk: paths[j].TravelRisk, 
-                        points: paths[j].points, 
-                        up: nearestSeg.up, 
-                        down: nearestSeg.down});
-                }
-            }
-        }
-
-        // get closest paths
-        getClosestPaths();
-
-        // Show these closest path
-        $('#side-bar-list').remove();
-        var groupList = createSideBarList();
-        $('#closeNav').after(groupList);
-        $("#sidebar").css({"display": "block", "width": "350px"});
-        //google.maps.event.trigger(station_markers[target_path_collection[0].station], 'click');
-
-        centerMapOnRouteIntermediate(0);
-
-        // Draw polyline path
-        drawPath(0, 0, map);
+        locAccPosAndRoutes(event.latLng);
     });
+}
+
+/**
+ * Locate accident position and get routes
+ * @param {*} accident accident position Latlng
+ */
+
+function locAccPosAndRoutes(accident){
+    // remove accident marker if exists.
+    if (accident_marker){
+        accident_marker.setMap(null);
+        accident_marker = null;
+    }
+
+    if (info_window){
+        info_window.close();
+    }
+
+    // accident = event.latLng;
+    accident_marker = new google.maps.Marker({
+        position: accident,
+        icon:'./img/jiaotongshigu.png',
+        map: map});
+
+    addMarkerClickListener(accident_marker, marker_type.ACCIDENT);
+
+    var accident_coords = {lat: accident.lat(), lng: accident.lng()};
+
+    map.setCenter({lat: accident.lat(), lng: accident.lng()});
+    map.setZoom(accidentZoom);
+
+    deleteMarkers(polylines);
+    paths_potential = [];
+    nodes_inside = [];
+
+    // check which nodes are inside the circle
+    for (var i = 0; i < nodes.length; i++){
+        if (haversine_distance(accident_coords, nodes[i]) * 1000 <= radius) {
+            nodes_inside.push(nodes[i]);
+        }
+    }
+
+    // obtain paths to every node within the circle
+    for (var i = 0; i < nodes_inside.length; i++){
+        var downStream = nodes_inside[i];   // node destination
+        for (var j = 0; j < paths.length; j++){
+            if (paths[j].downStream === downStream.id){
+                var points = paths[j].points;
+                var temp_distances = [];
+                for (var k = 0; k < points.length - 1; k++){
+                    var temp_distance = get_distance(accident_coords, points[k], points[k + 1]);
+                    temp_distances.push({distance: temp_distance, up: points[k], down: points[k + 1]});
+                }
+
+                var nearestSeg = getNearestSegment(temp_distances);
+                paths_potential.push({
+                    linkId: paths[j].LinkID, 
+                    distance: nearestSeg.distance,
+                    number: i,
+                    travelTime: paths[j].TravelTime,
+                    travelRisk: paths[j].TravelRisk, 
+                    points: paths[j].points, 
+                    up: nearestSeg.up, 
+                    down: nearestSeg.down});
+            }
+        }
+    }
+
+    // get closest paths
+    getClosestPaths();
+
+    // Show these closest path
+    $('#side-bar-list').remove();
+    var groupList = createSideBarList();
+    $('#closeNav').after(groupList);
+    $("#sidebar").css({"display": "block", "width": "350px"});
+
+    centerMapOnRouteIntermediate(0);
+
+    // Draw polyline path
+    drawPath(0, 0, map);
 }
 
 /**
@@ -495,34 +514,6 @@ function addMarkerClickListener(marker, type){
         info_window = infowindow;
     });
 }
-
-// // Sets the map on nearest station markers
-// // Approach One: Number - based
-// /**
-//  * 
-//  * @param {*} map Google map object
-//  * @param {*} k the number of stations shown
-//  * @param {*} coords accident spot coordinate
-//  */
-// function setMapOnNearest(map, k, coords, markers){
-//     clearMarkers(markers);
-
-//     markers.sort(function(a,b){
-//         a_lat_distance = a.position.lat() - coords.lat;
-//         a_lng_distance = a.position.lng() - coords.lng;
-//         a_l2_distance = Math.sqrt(a_lat_distance * a_lat_distance + a_lng_distance * a_lng_distance);
-
-//         b_lat_distance = b.position.lat() - coords.lat;
-//         b_lng_distance = b.position.lng() - coords.lng;
-//         b_l2_distance = Math.sqrt(b_lat_distance * b_lat_distance + b_lng_distance * b_lng_distance);
-
-//         return a_l2_distance - b_l2_distance
-//     });
-
-//     for (var i = 0; i < k; i++){
-//         markers[i].setMap(map);
-//     }
-// }
 
 // Sort the whole node list by the distance between the accident spot and each node
 /**
