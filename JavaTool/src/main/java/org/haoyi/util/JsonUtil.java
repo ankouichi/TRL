@@ -50,4 +50,8 @@ public class JsonUtil {
         mapper.writeValue(new File(file), routes);
     }
 
+    public static void writeFloodJsonFile(String file, List<PrecipitationPoint> ppList) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(new File(file), ppList);
+    }
 }

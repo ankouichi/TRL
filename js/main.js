@@ -63,6 +63,7 @@ var polylines = [];
 var closest_paths = [];
 var target_path_collection = [];
 var geocoder;
+var precipitationPoints;
 
 const marker_type = {
     STATION: 'station',
@@ -318,6 +319,29 @@ function initMap() {
     // place a marker on the map where the user clicks
     google.maps.event.addListener(map, 'click', function(event){
         locAccPosAndRoutes(event.latLng);
+    });
+
+    // 9/26 added
+    // Obtain paths info
+    $.getJSON("./js/flood-severe.json", function (data){
+        var heatmapData = [];
+        for (var i = 0; i < data.length; i++) {
+            var latLng = new google.maps.LatLng(data[i].lat, data[i].lng);
+            var weightedLoc = {
+                location: latLng,
+                weight: Math.pow(2, data[i].rate)
+                // weight: 0.1 * data[i].rate
+            };
+            
+            heatmapData.push(weightedLoc);
+        }
+
+        var heatmap = new google.maps.visualization.HeatmapLayer({
+        data: heatmapData,
+        dissipating: false,
+        map: map
+        });
+
     });
 }
 
