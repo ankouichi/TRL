@@ -52,7 +52,7 @@ var accident_marker;
 var info_window;
 var dallas = {lat: 32.80, lng: -96.80};
 var initialZoom = 11;
-var accidentZoom = 14;
+var accidentZoom = 15;
 var nodes;
 var nodes_inside = [];
 // var circle;
@@ -63,7 +63,8 @@ var polylines = [];
 var closest_paths = [];
 var target_path_collection = [];
 var geocoder;
-var precipitationPoints;
+var pathsWithFlooding;
+var interLinks;
 
 const marker_type = {
     STATION: 'station',
@@ -316,32 +317,15 @@ function initMap() {
         paths = data;
     });
 
+    // Get paths with flooding info
+    // Added on 10/11/2020
+    $.getJSON("./js/pathsWithFlood-severe.json", function (data){
+        pathsWithFlooding = data;
+    });
+
     // place a marker on the map where the user clicks
     google.maps.event.addListener(map, 'click', function(event){
         locAccPosAndRoutes(event.latLng);
-    });
-
-    // 9/26 added
-    // Obtain paths info
-    $.getJSON("./js/flood-severe.json", function (data){
-        var heatmapData = [];
-        for (var i = 0; i < data.length; i++) {
-            var latLng = new google.maps.LatLng(data[i].lat, data[i].lng);
-            var weightedLoc = {
-                location: latLng,
-                weight: Math.pow(2, data[i].rate)
-                // weight: 0.1 * data[i].rate
-            };
-            
-            heatmapData.push(weightedLoc);
-        }
-
-        var heatmap = new google.maps.visualization.HeatmapLayer({
-        data: heatmapData,
-        dissipating: false,
-        map: map
-        });
-
     });
 }
 
@@ -434,30 +418,47 @@ function locAccPosAndRoutes(accident){
  */
 function drawPath(col_idx, route_idx, map){
     var route = target_path_collection[col_idx].paths[route_idx]
-    var points = route.points;
-    var upIdx = points.indexOf(route.up);
-    var downIdx = points.indexOf(route.down);
-    var correct_path = points.slice(0,downIdx + 1);
 
-    var lineSymbol = {
-        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
-    };
+    // modified on 10/11/2020
+    // added flooding data
+    var possible_paths = pathsWithFlooding.filter(p => {
+        return p.LinkID == route.linkId && p.TravelRisk == route.travelRisk && p.TravelTime == route.travelTime
+    })
 
-    var targetPath = new google.maps.Polyline({
-        path: correct_path,
-        geodesic: true,
-        strokeColor: '#1E90FF',
-        strokeOpacity: 1.0,
-        strokeWeight: 2,
-        icons: [{
-            icon: lineSymbol,
-            offset: '100%',
-            repeat: '10%'
-        }]
-    });
-      
-    targetPath.setMap(map);
-    polylines.push(targetPath);
+    if (possible_paths.length > 0) {
+        var lineSymbol = {
+            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
+        };
+
+        var tmp_path = possible_paths[0];
+        interLinks = tmp_path.floods;
+
+        for (var i = 0; i < interLinks.length; i++) {
+            var points2Draw = interLinks[i].points
+            var idx = points2Draw.indexOf(route.down)
+            if (idx > -1) {
+                // contains the downstream point
+                points2Draw = points2Draw.slice(0, idx + 1);
+            }
+
+            var properties = determine_polyline_properties(interLinks[i].flood.rate)
+            var subPath = new google.maps.Polyline({
+                path: points2Draw,
+                geodesic: true,
+                strokeColor: properties.color,
+                strokeOpacity: 1.0,
+                strokeWeight: properties.weight,
+                icons: [{
+                    icon: lineSymbol,
+                    offset: '100%',
+                    repeat: '200px'
+                }]
+            });
+              
+            subPath.setMap(map);
+            polylines.push(subPath);
+        }
+    }
 }
 
 /**
@@ -711,4 +712,22 @@ function get_distance(pointA, pointB, pointC){
     }
 
     return 2 * heron_formular(edgeA, edgeB, edgeC) / edgeA;
+}
+
+/**
+ * Determine polyline weight and color based on flooding rate value
+ * @param {*} flood_rate 
+ */
+function determine_polyline_properties(flood_rate) {
+    if (flood_rate < 0.1) {
+        return { "weight" : 4, "color" : "#1E90FF"}
+    } else if (flood_rate < 0.3) {
+        return { "weight" : 4, "color" : "#ECB60F"}
+    } else if (flood_rate < 0.5) {
+        return { "weight" : 4, "color" : "#EC810F"}
+    } else if (flood_rate < 0.7) {
+        return { "weight" : 4, "color" : "#EC370F"}
+    } else {
+        return { "weight" : 4, "color" : "#720907"}
+    }
 }
