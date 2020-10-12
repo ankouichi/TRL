@@ -25,6 +25,12 @@ public class JsonUtil {
         return Arrays.asList(mapper.readValue(new File(file), Node[].class));
     }
 
+    // added on 10/11/2020
+    public static List<OdPair> readPathJsonFile(String file) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        return Arrays.asList(mapper.readValue(new File(file), OdPair[].class));
+    }
+
     public static void writeJsonFile(String file, List<OdPair> pairs) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(new File(file), pairs);
@@ -53,5 +59,10 @@ public class JsonUtil {
     public static void writeFloodJsonFile(String file, List<PrecipitationPoint> ppList) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(new File(file), ppList);
+    }
+
+    public static void write2JsonFile(String file, List list) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(new File(file), list);
     }
 }

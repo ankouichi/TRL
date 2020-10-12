@@ -26,7 +26,7 @@ public class MergeFiles
     static String ORIGINAL_PATH_JSON = "C:\\Users\\Daniel\\Documents\\GitHub\\TRL\\js\\outShortestPath-modified.json";
     static String LINK_JSON = "C:\\Users\\Daniel\\Documents\\GitHub\\TRL\\js\\links-new.json";
 
-    private static Integer[] getIntermediates(String str){
+    public static Integer[] getIntermediates(String str){
         String input = str.replaceAll("] \\[", ", ").replaceAll("\\[", "").replaceAll("]","");
         input = input.replaceAll("n", "").replaceAll(" ", "");
         String[] numStrs = input.split(",", 0);
