@@ -319,8 +319,13 @@ function initMap() {
 
     // Get paths with flooding info
     // Added on 10/11/2020
-    $.getJSON("./js/pathsWithFlood-severe.json", function (data){
+    $.getJSON("./js/pathsWithFlood-severe-first.json", function (data){
         pathsWithFlooding = data;
+
+        $.getJSON("./js/pathsWithFlood-severe-second.json", function (data){
+            pathsWithFlooding.push.apply(pathsWithFlooding, data);
+            // pathsWithFlooding = data;
+        });
     });
 
     // place a marker on the map where the user clicks

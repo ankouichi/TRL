@@ -22,10 +22,19 @@ public class PathWithFlood {
 
     public static void main(String[] args) throws IOException {
         List<OdPair> pathWithoutFlood = JsonUtil.readPathJsonFile(PathWithoutFloodDir);
-        List<OdPairWithFlood> odwfs = cvtOdPair2OdPairWF(pathWithoutFlood);
-        String floodJsonFile = jsFolder + FLOOD_PREFIX + "severe" + FLOOD_SUFFIX;
-        System.out.print(floodJsonFile);
-//        JsonUtil.write2JsonFile(floodJsonFile, odwfs);
+        int size = pathWithoutFlood.size();
+
+        List<OdPair> firstHalf = new ArrayList<>(pathWithoutFlood.subList(0, size / 2));
+        List<OdPairWithFlood> odwfs_1 = cvtOdPair2OdPairWF(firstHalf);
+        String floodJsonFile_first = jsFolder + FLOOD_PREFIX + "severe-first" + FLOOD_SUFFIX;
+        JsonUtil.write2JsonFile(floodJsonFile_first, odwfs_1);
+
+        List<OdPair> secondHalf = new ArrayList<>(pathWithoutFlood.subList(size / 2, size));
+        List<OdPairWithFlood> odwfs_2 = cvtOdPair2OdPairWF(secondHalf);
+        String floodJsonFile_second = jsFolder + FLOOD_PREFIX + "severe-second" + FLOOD_SUFFIX;
+        JsonUtil.write2JsonFile(floodJsonFile_second, odwfs_2);
+
+        System.out.print("Finished!!");
     }
 
     private static List<OdPairWithFlood> cvtOdPair2OdPairWF(List<OdPair> odPairs) throws IOException {
