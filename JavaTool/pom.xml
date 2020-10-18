@@ -34,10 +34,16 @@
       <artifactId>jackson-databind</artifactId>
       <version>2.10.3</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/com.google.javascript/closure-compiler -->
+    <dependency>
+      <groupId>com.google.javascript</groupId>
+      <artifactId>closure-compiler</artifactId>
+      <version>v20201006</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.11</version>
+      <version>4.13.1</version>
       <scope>test</scope>
     </dependency>
     <!-- https://mvnrepository.com/artifact/com.google.javascript/closure-compiler -->
